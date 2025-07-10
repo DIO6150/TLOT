@@ -1,0 +1,1 @@
+g++ src/*.cpp src/vendor/glad/src/glad.c -Isrc/include -Isrc/vendor/glad/include -Isrc/vendor -Lsrc/libs/linux -Wall -Werror -Wextra -lm -lglfw3 -o bin/TheLegendOfTeto.out -g

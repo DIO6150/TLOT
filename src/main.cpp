@@ -14,84 +14,82 @@
 
 int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 {
-    GLFWwindow* window;
+	GLFWwindow* window;
 
-    if (!glfwInit ()) exit (-1);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+	#ifdef __linux__
+	glfwInitHint (GLFW_PLATFORM, GLFW_PLATFORM_X11);
+	#endif
 
-    window = glfwCreateWindow (SIZE_W, SIZE_H, TITLE, NULL, NULL);
-    if (!window) {
-        glfwTerminate ();
-        exit (-1);
-    }
-    glfwMakeContextCurrent (window);
+	if (!glfwInit ()) exit (-1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        exit (-1);
-    }
+	window = glfwCreateWindow (SIZE_W, SIZE_H, TITLE, NULL, NULL);
+	if (!window) {
+		glfwTerminate ();
+		exit (-1);
+	}
+	glfwMakeContextCurrent (window);
 
-    glViewport (0, 0, SIZE_W, SIZE_H);
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		exit (-1);
+	}
 
-    enableOpenGLDebugCallback ();
+	glViewport (0, 0, SIZE_W, SIZE_H);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-    /* TEST DATA */
+	enableOpenGLDebugCallback ();
 
-    std::vector<Engine::Vertex> vertices = {
-        { -0.5f, -0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
-        {  0.5f, -0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
-        {  0.5f,  0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
-        { -0.5f,  0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 }
-    };
+	/* TEST DATA */
 
-    std::vector<uint32_t> indices = {
-        0, 1, 2, 2, 3, 0
-    };
+	std::vector<Engine::Vertex> vertices = {
+		{ -0.5f, -0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
+		{  0.5f, -0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
+		{  0.5f,  0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 },
+		{ -0.5f,  0.5f, 0.0f, 0.0, 0.0, 0.0, 0.0, 0.0 }
+	};
 
-    /* INIT STUFF */
+	std::vector<uint32_t> indices = {
+		0, 1, 2, 2, 3, 0
+	};
 
-    Engine::Shader shader1 {"<vs>assets/shaders/default.vertex", "<fs>assets/shaders/default.fragment"};
-    Engine::Scene scene;
-
-    Engine::MeshManager mesh_manager;
-    Engine::Mesh *planeMesh = mesh_manager.CreateMesh (vertices, indices);
-
-    Engine::GameObject *plane1 = scene.CreateObject (
-	planeMesh, 
 	{
-		glm::mat4 {},
-		{1.0, 1.0, 1.0},
-		{0.0, 0.0, 0.0, 0.0},
-	},
-	&shader1);
+		/* INIT STUFF */
+		Engine::Shader shader1 {"<vs>assets/shaders/default.vertex", "<fs>assets/shaders/default.fragment"};
+		Engine::Scene scene;
 
-    if (!plane1) {
-	std::cout << "aahahahahaha\n";
-	exit (-1);
-    }
+		Engine::MeshManager mesh_manager;
+		Engine::Mesh *planeMesh = mesh_manager.CreateMesh (vertices, indices);
 
-    /* MAIN LOOP */
-    while (!glfwWindowShouldClose (window)) {
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	    
-	GLint drawFbo = -1;
-	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFbo);
-	printf("Draw FBO: %d\n", drawFbo);  // Should be 0 for default framebuffer
+		Engine::GameObject *plane1 = scene.CreateObject (
+		planeMesh, 
+		{
+			glm::mat4 {},
+			{1.0, 1.0, 1.0},
+			{0.0, 0.0, 0.0, 0.0},
+		},
+		&shader1);
 
-	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE)
-		printf("FBO incomplete: 0x%x\n", status);
-	scene.Render ();
-        
-	glFinish ();
-	glfwSwapBuffers (window);
-	glfwPollEvents ();
-    }
+		if (!plane1) {
+			std::cout << "aahahahahaha\n";
+			exit (-1);
+		}
 
-    glfwTerminate ();
-    return (0);
+		/* MAIN LOOP */
+		while (!glfwWindowShouldClose (window)) {
+			glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				
+			scene.Render ();
+
+			glfwSwapBuffers (window);
+			glfwPollEvents ();
+		}
+	}
+
+	glfwDestroyWindow (window);
+	glfwTerminate ();
+	return (0);
 }

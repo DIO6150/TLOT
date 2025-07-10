@@ -24,7 +24,6 @@ Engine::Batch *Engine::Scene::CreateBatch (Shader* shader_base) {
 }
 
 Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, InstanceData data, Shader *shader) {
-	
 	Batch *batch;
 	GameObject *object;
 

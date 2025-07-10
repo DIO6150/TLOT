@@ -17,3 +17,7 @@ Engine::Mesh *Engine::MeshManager::CreateMesh (
 
 	return (&m);
 }
+
+void Engine::MeshManager::Cleanup () {
+	
+}

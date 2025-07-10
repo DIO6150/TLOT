@@ -29,7 +29,7 @@ namespace Engine {
 	public:
 		Scene ();
 		
-		Batch *		CreateBatch (Shader* shader_base);
+		Batch *		CreateBatch  (Shader* shader_base);
 		GameObject *	CreateObject (Mesh *mesh, InstanceData data, Shader *shader);
 		void		Render ();
 
