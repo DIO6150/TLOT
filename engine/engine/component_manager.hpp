@@ -22,22 +22,23 @@ namespace Engine {
 		
 		template<typename T>
 		uint64_t CreateComponentArray () {
-			uint64_t hash;
+			uint64_t uuid;
+			uuid = typeid (T).hash_code ();
 
-			hash = typeid (T).hash_code ();
-
-			if (m_component_arrays.find (hash) == m_component_arrays.end ()) {
-				m_component_arrays.insert ({hash, std::make_shared<EngineDetail::ComponentArray<T>> ()});
+			if (m_component_arrays.find (uuid) == m_component_arrays.end ()) {
+				m_component_arrays.insert ({uuid, std::make_shared<EngineDetail::ComponentArray<T>> ()});
 			}
 			
-			return (hash);
+			return (uuid);
 		}
 
 		template<typename T>
-		EngineDetail::ComponentArray<T> * GetComponentArray (uint64_t uuid) {
-			assert(m_component_arrays.find (uuid) != m_component_arrays.end ());
+		std::shared_ptr<EngineDetail::ComponentArray<T>> GetComponentArray (uint64_t uuid) {
+			std::unordered_map<uint64_t, std::shared_ptr<EngineDetail::IComponentArray>>::iterator pos;
 
-			return (static_cast<EngineDetail::ComponentArray<T> *>(m_component_arrays[uuid]));
+			assert(((pos = m_component_arrays.find (uuid)) != m_component_arrays.end ()));
+
+			return (std::static_pointer_cast<EngineDetail::ComponentArray<T>> (pos->second));
 		}
 
 		public:
@@ -46,9 +47,14 @@ namespace Engine {
 		}
 
 		template<typename T>
-		void AddComponent (uint32_t entity, const T & component) {
+		void RegisterComponent () {
+			CreateComponentArray<T> ();
+		}
+
+		template<typename T>
+		void AddComponent (uint32_t entity, const T && component) {
 			uint64_t uuid;
-			uuid = CreateComponentArray<T> ();
+			uuid = typeid (T).hash_code ();
 
 			GetComponentArray<T> (uuid)->AddEntity (entity, component);
 		}

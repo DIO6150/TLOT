@@ -16,11 +16,11 @@ namespace EngineDetail {
 	};
 
 	template<typename T>
-	class ComponentArray : IComponentArray {
+	class ComponentArray : public IComponentArray {
 		private:
-		std::vector<T> m_components;
-		std::unordered_map<uint32_t, size_t> m_entity_index_map;
-		std::unordered_map<size_t, uint32_t> m_index_entity_map;
+		std::vector<T> 				m_components;
+		std::unordered_map<uint32_t, size_t>	m_entity_index_map;
+		std::unordered_map<size_t, uint32_t>	m_index_entity_map;
 
 		public:
 		ComponentArray () {
@@ -28,9 +28,9 @@ namespace EngineDetail {
 		}
 
 		void AddEntity (uint32_t entity, const T & component) {
-			m_components.push_back (component);
-			m_entity_index_map.insert ({entity, m_components.size ()});
-			m_index_entity_map.insert ({m_components.size (), entity});
+			m_components		.push_back (component);
+			m_entity_index_map	.insert    ({entity, m_components.size ()});
+			m_index_entity_map	.insert    ({m_components.size (), entity});
 		}
 
 		void RemoveEntity (uint32_t entity) {

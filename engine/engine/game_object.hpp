@@ -4,29 +4,32 @@
 
 #include <details/instance_data.hpp>
 
+namespace EngineDetail {
+	class Batch;
+}
+
 namespace Engine {
 	class Scene;
-	class Batch;
 	class Mesh;
 
 	class GameObject {
 	private:
-		Mesh *		m_mesh;
+		Mesh *				m_mesh;
 		EngineDetail::InstanceData 	m_data;
 		
-		Scene *		m_parent_scene;
-		Batch *		m_parent_batch;
+		Scene *				m_parent_scene;
+		EngineDetail::Batch *		m_parent_batch;
 
-		bool 		m_should_render;
+		bool 				m_should_render;
 
-		friend 		Scene;
-		friend 		Batch;
+		friend 				Scene;
+		friend 				EngineDetail::Batch;
 
 		GameObject (
 			Mesh *				mesh,
 			EngineDetail::InstanceData 	data,
 			Scene *				scene,
-			Batch *				batch
+			EngineDetail::Batch *		batch
 		);
 
 	public:

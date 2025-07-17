@@ -1,6 +1,6 @@
-#include "batch.hpp"
+#include <details/batch.hpp>
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
 #include <details/draw_command.hpp>
 #include <details/instance_data.hpp>
@@ -11,9 +11,9 @@
 #include <game_object.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/string_cast.hpp"
+#include <glm/gtx/string_cast.hpp>
 
-Engine::Batch &Engine::Batch::operator= (const Engine::Batch other) {
+EngineDetail::Batch & EngineDetail::Batch::operator= (const EngineDetail::Batch other) {
 	m_instance_counter = other.m_instance_counter;
 	m_loaded_objects = other.m_loaded_objects;
 
@@ -44,36 +44,11 @@ Engine::Batch &Engine::Batch::operator= (const Engine::Batch other) {
 	return (*this);
 }
 
-Engine::Batch::Batch (const Engine::Batch &other) {
-	m_instance_counter = other.m_instance_counter;
-	m_loaded_objects = other.m_loaded_objects;
-	
-	m_should_resend_ssbo = other.m_should_resend_ssbo;
-	m_visible_mesh_count = other.m_visible_mesh_count;
-	m_vertex_count = other.m_vertex_count;
-	m_index_count = other.m_index_count;
-
-	m_vao = other.m_vao;
-	m_vbo = other.m_vbo;
-	m_ebo = other.m_ebo;
-	m_dibo = other.m_dibo;
-	m_instance_ssbo = other.m_instance_ssbo;
-
-	m_diffuseMap = other.m_diffuseMap;
-	m_ambientMap = other.m_ambientMap;
-	m_normalMap = other.m_normalMap;
-	m_specularMap = other.m_specularMap;
-	m_albedoMap = other.m_albedoMap;
-
-	m_shader = other.m_shader;
-	m_layout = other.m_layout;
-
-	m_parent_scene = other.m_parent_scene;
-
-	m_hash = other.m_hash;
+EngineDetail::Batch::Batch (const EngineDetail::Batch & other) {
+	(*this) = other;
 }
 
-Engine::Batch::Batch () :
+EngineDetail::Batch::Batch () :
 	m_should_resend_ssbo (true),
 	m_visible_mesh_count (0),
 	m_vertex_count (0),
@@ -81,12 +56,13 @@ Engine::Batch::Batch () :
 	
 }
 
-Engine::Batch::Batch (Shader* shader_base) :
+EngineDetail::Batch::Batch (Engine::Shader * shader_base) :
 	Batch (nullptr, shader_base) {
 	
 }
 
-Engine::Batch::Batch (Layout *&&layout, Shader* shader_base) :
+// TODO : remove pointer, only ref is needed
+EngineDetail::Batch::Batch (Engine::Layout *&&layout, Engine::Shader * shader_base) :
 	m_should_resend_ssbo (true),
 	m_visible_mesh_count (0),
 	m_vertex_count (0),
@@ -127,7 +103,7 @@ Engine::Batch::Batch (Layout *&&layout, Shader* shader_base) :
 	Unbind ();
 }
 
-Engine::Batch::Batch (Layout *&&layout, std::vector<Mesh *> &meshes, Shader* shader_base) :
+EngineDetail::Batch::Batch (Engine::Layout *&& layout, std::vector<Engine::Mesh *> & meshes, Engine::Shader* shader_base) :
 	m_should_resend_ssbo (true),
 	m_visible_mesh_count (0),
 	m_vertex_count (0),
@@ -141,8 +117,8 @@ Engine::Batch::Batch (Layout *&&layout, std::vector<Mesh *> &meshes, Shader* sha
 	size_t ebo_size;
 	size_t dibo_size;
 	
-	std::vector<Vertex>	vertices;
-	std::vector<uint32_t> 	indices;
+	std::vector<Engine::Vertex>	vertices;
+	std::vector<uint32_t> 		indices;
 
 
 	glGenVertexArrays(1, &m_vao);
@@ -164,7 +140,7 @@ Engine::Batch::Batch (Layout *&&layout, std::vector<Mesh *> &meshes, Shader* sha
 	}
 
 
-	vbo_size	= vertices.size () 	* sizeof (Vertex);
+	vbo_size	= vertices.size () 	* sizeof (Engine::Vertex);
 	ebo_size	= indices .size () 	* sizeof (uint32_t);
 	dibo_size	= MAX_INSTANCE_COUNT 	* sizeof (EngineDetail::DrawCommand);
 
@@ -182,7 +158,7 @@ Engine::Batch::Batch (Layout *&&layout, std::vector<Mesh *> &meshes, Shader* sha
 	Unbind ();
 }
 
-Engine::Batch::~Batch () {
+EngineDetail::Batch::~Batch () {
 	// vbo, ebo, dibo and instance_ssbo all are contiguous in memory and therefore has no technical difference when using an array.
 	// it's what I thought to be the case but it seems to be more complicated than that
 	// we'll juste delete them one by one to be safe
@@ -195,8 +171,8 @@ Engine::Batch::~Batch () {
 	delete m_layout;
 }
 
-void Engine::Batch::UploadGameObject (GameObject *object) {
-	std::unordered_map<Mesh *, uint32_t>::iterator pos;
+void EngineDetail::Batch::UploadGameObject (Engine::GameObject * object) {
+	std::unordered_map<Engine::Mesh *, uint32_t>::iterator pos;
 	if ((pos = m_instance_counter.find (object->m_mesh)) == m_instance_counter.end ()) {
 		// Uploading new geometry to the gpu
 		Expand (object->m_mesh);
@@ -215,7 +191,7 @@ void Engine::Batch::UploadGameObject (GameObject *object) {
 	m_loaded_objects.push_back (object);
 }
 
-void Engine::Batch::Expand (Mesh *target_mesh) {
+void EngineDetail::Batch::Expand (Engine::Mesh * target_mesh) {
 	void* old_vbo_data = NULL;
 	void* old_ebo_data = NULL;
 
@@ -237,28 +213,28 @@ void Engine::Batch::Expand (Mesh *target_mesh) {
 
 	std::cout << new_vertex_count << "  :   " << new_index_count << "\n";
 
-	glNamedBufferData (m_vbo, (new_vertex_count) * sizeof (Vertex),   NULL, GL_DYNAMIC_DRAW);
-	glNamedBufferData (m_ebo, (new_index_count)  * sizeof (uint32_t), NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (m_vbo, (new_vertex_count) * sizeof (Engine::Vertex),	NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (m_ebo, (new_index_count)  * sizeof (uint32_t), 	NULL, GL_DYNAMIC_DRAW);
 
 	if (m_vertex_count > 0 && m_index_count > 0) {
-		glNamedBufferSubData (m_vbo, 0, m_vertex_count * sizeof (Vertex),   old_vbo_data);
-		glNamedBufferSubData (m_ebo, 0, m_index_count  * sizeof (uint32_t), old_ebo_data);
+		glNamedBufferSubData (m_vbo, 0, m_vertex_count * sizeof (Engine::Vertex),	old_vbo_data);
+		glNamedBufferSubData (m_ebo, 0, m_index_count  * sizeof (uint32_t),		old_ebo_data);
 	}
 
 	static int called = 0;
-	std::cout << ++called << "\n";
+	std::cout << "Expand Called : " << ++called << "\n";
 
 }
 
-void Engine::Batch::UploadMesh (Mesh *mesh) {
-	glNamedBufferSubData (m_vbo, m_vertex_count * sizeof (Vertex),   mesh->vertices.size () * sizeof (Vertex),   mesh->vertices.data ());
-	glNamedBufferSubData (m_ebo, m_index_count  * sizeof (uint32_t), mesh->indices .size () * sizeof (uint32_t), mesh->indices .data ());
+void EngineDetail::Batch::UploadMesh (Engine::Mesh * mesh) {
+	glNamedBufferSubData (m_vbo, m_vertex_count * sizeof (Engine::Vertex),   mesh->vertices.size () * sizeof (Engine::Vertex),   	mesh->vertices.data ());
+	glNamedBufferSubData (m_ebo, m_index_count  * sizeof (uint32_t),	 mesh->indices .size () * sizeof (uint32_t),		mesh->indices .data ());
 
 	m_vertex_count += mesh->vertices.size ();
 	m_index_count  += mesh->indices .size ();
 }
 
-void Engine::Batch::Bind () const {
+void EngineDetail::Batch::Bind () const {
 	glBindVertexArray (m_vao);
 	glBindBuffer (GL_ARRAY_BUFFER, m_vbo);
 	glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, m_ebo);
@@ -266,7 +242,7 @@ void Engine::Batch::Bind () const {
 	glBindBufferBase (GL_SHADER_STORAGE_BUFFER, 0, m_instance_ssbo);
 }
 
-void Engine::Batch::Unbind () const {
+void EngineDetail::Batch::Unbind () const {
 	glBindVertexArray (0);
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
 	glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -274,19 +250,19 @@ void Engine::Batch::Unbind () const {
 	glBindBuffer (GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-uint32_t Engine::Batch::GetDiffuse () const {
+uint32_t EngineDetail::Batch::GetDiffuse () const {
 	return (m_diffuseMap);
 }
 
-uint32_t Engine::Batch::GetAmbient () const {
+uint32_t EngineDetail::Batch::GetAmbient () const {
 	return (m_ambientMap);
 }
 
-Engine::Shader *Engine::Batch::GetShader () const {
+Engine::Shader *EngineDetail::Batch::GetShader () const {
 	return (m_shader);
 }
 
-void Engine::Batch::UploadDrawCommands () const {
+void EngineDetail::Batch::UploadDrawCommands () const {
 	size_t		index_offset;
 	size_t		vertex_offset;
 	size_t		instance_offset;
@@ -321,9 +297,8 @@ void Engine::Batch::UploadDrawCommands () const {
 	}
 }
 
-void Engine::Batch::UploadInstanceDataSSBO () const {
+void EngineDetail::Batch::UploadInstanceDataSSBO () const {
 	intptr_t offset;
-
 
 	offset = 0;
 	

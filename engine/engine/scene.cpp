@@ -1,6 +1,6 @@
 #include <scene.hpp>
 
-#include <batch.hpp>
+#include <details/batch.hpp>
 #include <details/draw_command.hpp>
 #include <game_object.hpp>
 #include <mesh.hpp>
@@ -15,18 +15,14 @@ Engine::Scene::Scene () {
 	m_batches.reserve (8);
 }
 
-Engine::Batch *Engine::Scene::CreateBatch (Shader* shader_base) {
-	std::cout << "pre push\n";
+EngineDetail::Batch *Engine::Scene::CreateBatch (Shader* shader_base) {
 	m_batches.emplace_back (new Layout { {{GL_FLOAT, 3}, {GL_FLOAT, 2}, {GL_FLOAT, 3}} }, shader_base);
-	std::cout << "post push\n";
 
 	return (&m_batches.back ());
 }
 
-
-// TODO : no EngineDetail here
 Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, EngineDetail::InstanceData data, Shader *shader) {
-	Batch *batch;
+	EngineDetail::Batch *batch;
 	GameObject *object;
 
 	batch = GetBatch (shader);
@@ -43,8 +39,8 @@ Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, EngineDetail::Insta
 	return (object);
 }
 
-Engine::Batch *Engine::Scene::GetBatch (Shader *shader) {
-	auto pos = std::find_if (m_batches.begin (), m_batches.end (), [shader](Batch &batch) -> bool {
+EngineDetail::Batch *Engine::Scene::GetBatch (Shader *shader) {
+	auto pos = std::find_if (m_batches.begin (), m_batches.end (), [shader](EngineDetail::Batch &batch) -> bool {
 		return (batch.GetShader () == shader);
 	});
 

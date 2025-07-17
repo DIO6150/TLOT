@@ -2,19 +2,21 @@
 
 #include <assert.h>
 #include <stdint.h>
+
+#include <algorithm>
+#include <memory>
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
-#include <memory>
 
 #include <details/event.hpp>
 
 namespace Engine {
 	class EventManager {
-		std::vector<uint64_t> 								m_registered_event;
+		std::unordered_map<uint64_t, std::function<void()>>				m_registered_event;
 		std::unordered_map<uint64_t, std::shared_ptr<EngineDetail::IListenerArray>> 	m_listeners;
-		std::unordered_map<uint64_t, EngineDetail::IEventQueue> 			m_event_pool;
+		std::unordered_map<uint64_t, std::shared_ptr<EngineDetail::IEventQueue>> 	m_event_pool;
+		std::unordered_map<uint64_t, std::shared_ptr<EngineDetail::IEventQueue>> 	m_event_pool_back;
 
 		public:
 		EventManager () {
@@ -26,7 +28,26 @@ namespace Engine {
 			uint64_t uuid;
 			uuid = typeid(Event).hash_code ();
 
-			m_registered_event.push_back (uuid);
+			std::shared_ptr<EngineDetail::ListenerArray<Event>> 	listener;
+			std::shared_ptr<EngineDetail::EventQueue<Event>> 	queue;
+			std::shared_ptr<EngineDetail::EventQueue<Event>> 	queue_back;
+
+			listener 	= std::make_shared<EngineDetail::ListenerArray<Event>> ();
+			queue		= std::make_shared<EngineDetail::EventQueue<Event>> ();
+			queue_back	= std::make_shared<EngineDetail::EventQueue<Event>> ();
+
+			m_listeners		.insert ({uuid, listener});
+			m_event_pool		.insert ({uuid, queue});
+			m_event_pool_back	.insert ({uuid, queue_back});
+
+			m_registered_event	.insert ({uuid, [&, uuid, listener, queue, queue_back] () -> void {
+				queue->Swap (queue_back);
+
+				while (!queue->IsEmpty ()) {
+					Event event = queue->Pop ();
+					listener->Execute (event);
+				}
+			}});
 		}
 
 		template<typename Event>
@@ -34,11 +55,9 @@ namespace Engine {
 			uint64_t uuid;
 			uuid = typeid(Event).hash_code ();
 
-			if (std::find (m_registered_event.begin (), m_registered_event.end (), uuid) == m_registered_event.end ()) {
-				m_listeners.insert ({uuid, std::make_shared<EngineDetail::ListenerArray<Event>> ()});
-			}
+			assert ((m_registered_event.find (uuid) != m_registered_event.end ()));
 
-			static_cast<std::shared_ptr<EngineDetail::ListenerArray<Event>>> (m_listeners[uuid])->RegisterListener ((EngineDetail::ListenerWrapper<Event>){listener, priority});
+			std::static_pointer_cast<EngineDetail::ListenerArray<Event>> (m_listeners[uuid])->RegisterListener ({listener, priority});
 		}
 
 		template<typename Event>
@@ -46,9 +65,9 @@ namespace Engine {
 			uint64_t uuid;
 			uuid = typeid(Event).hash_code ();
 
-			assert(std::find (m_registered_event.begin (), m_registered_event.end (), uuid) != m_registered_event.end ());
+			assert ((m_registered_event.find (uuid) != m_registered_event.end ()));
 
-			static_cast<EngineDetail::EventQueue<Event>*> (m_event_pool[uuid])->Push (event);
+			std::static_pointer_cast<EngineDetail::EventQueue<Event>> (m_event_pool_back[uuid])->Push (event);
 		};
 
 		template<typename Event>
@@ -56,10 +75,16 @@ namespace Engine {
 			uint64_t uuid;
 			uuid = typeid(Event).hash_code ();
 
-			assert(std::find (m_registered_event.begin (), m_registered_event.end (), uuid) != m_registered_event.end ());
+			assert ((m_registered_event.find (uuid) != m_registered_event.end ()));
 
-			static_cast<std::shared_ptr<EngineDetail::ListenerArray<Event>>> (m_listeners[uuid])->Execute (event);
+			std::static_pointer_cast<EngineDetail::ListenerArray<Event>> (m_listeners[uuid])->Execute (event);
 		};
+
+		void ProcessEvents () {
+			for (auto &[uuid, event_queue] : m_event_pool) {
+				m_registered_event[uuid] ();
+			}
+		}
 
 	};
 }

@@ -100,6 +100,12 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 #include <component_manager.hpp>
 #include <event_manager.hpp>
 #include <mesh_manager.hpp>
+#include <scene.hpp>
+
+
+// proto stuff
+#include <details/batch.hpp>
+#include <details/instance_data.hpp>
 
 #include <iostream>
 
@@ -107,17 +113,77 @@ struct DummyEvent {
 	int magic;
 };
 
+struct SuperDummyEvent {
+	int lasso;
+	std::string str;
+};
+
+struct DummyComponent {
+	int the;
+	int arcana;
+	int is;
+	int the2;
+	int mean;
+	int by;
+	int wich;
+	int all;
+	int that;
+	int is2;
+	int revealed;
+};
+
+struct GameObjectMoveEvent {
+	EngineDetail::InstanceData * data;
+};
+
+using Entity = uint64_t;
+
+
 int main (__attribute__((unused)) int argc, __attribute__((unused)) char ** argv) {
 	Engine::ComponentManager 	compo_manager 	{};
 	Engine::EventManager		event_manager 	{};
 	Engine::MeshManager		mesh_manager	{};
 
 	event_manager.RegisterEvent<DummyEvent> ();
+	event_manager.RegisterEvent<SuperDummyEvent> ();
 
 	event_manager.Subscribe<DummyEvent> ([] (const DummyEvent & event) -> Engine::EventResult {
 		std::cout << "Hello World : " << event.magic << "\n";
-		return (Engine::EventResult::COMPLETE);
+		return (Engine::EventResult::CONTINUE);
+	}, Engine::ListenPriority::MEDIUM);
+
+	event_manager.Subscribe<DummyEvent> ([] (const DummyEvent & event) -> Engine::EventResult {
+		if (event.magic < 15) {
+			std::cout << "I'm the strongest therfore I hereby declare : BEGONE " << event.magic << "\n";
+			return (Engine::EventResult::CANCEL);
+		}
+		else {
+			std::cout << "you are welcome here my friend " << event.magic << "\n";
+			return (Engine::EventResult::CONTINUE);
+		}
+	}, Engine::ListenPriority::UNCANCELABLE);
+
+	event_manager.Subscribe<SuperDummyEvent> ([] (const SuperDummyEvent & event) -> Engine::EventResult {
+		std::cout << "The idiot of the village has something to say : " << event.str << " = " << event.lasso << "\n";
+		return (Engine::EventResult::CONTINUE);
 	}, Engine::ListenPriority::MEDIUM);
 
 	event_manager.PostImmediate<DummyEvent> ({10});
+	event_manager.PostImmediate<DummyEvent> ({15});
+	event_manager.PostImmediate<SuperDummyEvent> ({10, "nice day for fishing aint it uaghagh"});
+	event_manager.PostImmediate<SuperDummyEvent> ({21, "gwak gwajk gwak"});
+
+	event_manager.PostDeferred<DummyEvent> ({5});
+	std::cout << "DummyEvent = 5 posted" << "\n";
+
+	event_manager.PostDeferred<DummyEvent> ({30});
+	std::cout << "DummyEvent = 30 posted" << "\n";
+
+	event_manager.PostDeferred<SuperDummyEvent> ({25, "hihihihia"});
+	std::cout << "SuperDummyEvent = 25, hihihihia posted" << "\n";
+
+	event_manager.ProcessEvents ();
+
+	compo_manager.AddComponent<DummyComponent> (0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
 }
