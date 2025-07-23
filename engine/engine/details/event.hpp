@@ -4,6 +4,12 @@
 #include <functional>
 
 namespace Engine {
+	// TODO: make it so an event can both Complete/Continue and Cancel at the same time either by calling something like Manager.CancelEvent () or by returning a tuple
+	/*
+		Complete: The event listener will be deleted after returning
+		Continue: The event listener will continue being executed when it receives an event
+		Cancel: Will stop the event from being propagated down to the lower priority listeners
+	*/
 	enum class EventResult {
 		COMPLETE,
 		CONTINUE,

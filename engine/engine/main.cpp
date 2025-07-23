@@ -97,6 +97,9 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 }
 */
 
+
+/*
+
 #include <component_manager.hpp>
 #include <event_manager.hpp>
 #include <mesh_manager.hpp>
@@ -186,4 +189,83 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char ** argv
 
 	compo_manager.AddComponent<DummyComponent> (0, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
+}
+*/
+
+#include <component_manager.hpp>
+#include <event_manager.hpp>
+#include <mesh_manager.hpp>
+#include <scene.hpp>
+
+
+// proto stuff
+//#include <details/batch.hpp>
+//#include <details/instance_data.hpp>
+
+#include <iostream>
+
+struct DummyComponent {
+	uint8_t iamthou;
+	uint8_t thouartI;
+};
+
+struct InstanceData {
+	uint8_t pretenditsamatrix;
+};
+
+struct Batch {
+	uint8_t batchId;
+};
+
+class ISystem {
+	protected:
+	virtual void OnEntityCreate (Entity entity) = 0;
+	virtual void OnEntityDestroy (Entity entity) = 0;
+};
+
+class BatchSystem : public ISystem {
+	private:
+	std::vector<BatchData> m_batches;
+
+	protected:
+	void OnEntityCreate (Entity entity) {
+		Batch & batch = coordinator.GetComponent<Batch> (entity);
+		InstanceData & instance = coordinator.GetComponent<InstanceData> (entity);
+
+		m_batches[batch.batchId].UploadInstanceData (entity, instance);
+	}
+
+	void OnEntityDestroy (Entity entity) {
+		// remove it from buffers
+	}
+
+	public:
+};
+
+class RenderSystem : public ISystem {
+	protected:
+	void OnEntityCreate (Entity entity) {
+
+	}
+
+	void OnEntityDestroy (Entity entity) {
+		
+	}
+
+	public:
+	void Render () {
+		
+	}
+};
+
+int main (__attribute__((unused)) int argc, __attribute__((unused)) char ** argv) {
+	Engine::Coordinator		coordinator;
+
+	coordinator.RegisterComponent<DummyComponent> ();
+	coordinator.RegisterComponent<InstanceData> ();
+	
+	coordinator.RegisterArchetype<DummyComponent, InstanceData> ();
+	coordinator.RegisterSystem<RenderSystem> ();
+
+	Engine::Entity ent = coordinator.GenerateEntity<DummyComponent, InstanceData> ({0, 0}, {0});
 }
