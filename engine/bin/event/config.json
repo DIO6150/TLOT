@@ -1,0 +1,25 @@
+[
+	{
+		"id": 0,
+		"listeners": [
+			{
+				"name": "OnDummy",
+				"script": "dummy_event.lua"
+			},
+			{
+				"name": "OnDummy2",
+				"script": "dummy_event.lua"
+			}
+		]
+	},
+
+	{
+		"id": 1,
+		"listeners": [
+			{
+				"name": "OnDamage",
+				"script": "damage_event.lua"
+			}
+		]
+	}
+]

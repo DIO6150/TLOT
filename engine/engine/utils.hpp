@@ -107,6 +107,8 @@ inline std::string ReadFile (std::string path)
 	return (buffer.str ());
 }
 
+
+// TODO: delete function
 inline uint64_t compute_hash(const std::string & s) {
     const int p = 102013;
     const int m = 1e9 + 9;
@@ -119,4 +121,14 @@ inline uint64_t compute_hash(const std::string & s) {
     }
 
     return (hash_value);
+}
+
+
+// TODO: Find a better hash function ? it seems :
+//	1) very destructive
+//	2) not very safe ?
+
+template<typename ... args>
+inline uint64_t multi_type_hash () {
+	return (static_cast<uint64_t> (typeid (args).hash_code ()) ^ ...);
 }

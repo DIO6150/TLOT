@@ -1,0 +1,4 @@
+{
+    "event_config": "event/config.json",
+    "event_listener_path": "event/listeners/"
+}
