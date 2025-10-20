@@ -50,5 +50,7 @@ namespace Engine {
 				++priority;
 			}
 		}
+
+		// ECS bit
 	}
 }

@@ -69,6 +69,7 @@ namespace Engine {
 		// Otherwise it will break top-level Execute(...) (like weird shit will happen and you DONT want that)
 		// The only case where Execute(...) is called recursivly is if a script calls PostImmediate, but cancelable is already set to false.
 		// So be aware when extending this functionnality.
+		// TODO : The way to fix this is to find a way to not break Execute when canceling an immediate event, maybe a FIFO where we push a cancel state and pop it back after script execution
 		void Execute (const Event & event, bool cancelable = true) {
 			bool should_continue;
 			
@@ -117,7 +118,7 @@ namespace Engine {
 
 		void LoadListener (
 			uint32_t event_id,
-			std::string function_name,
+			const std::string & function_name,
 			uint32_t priority,
 			const std::string & script) {
 			assert ((m_listeners.find (event_id) != m_listeners.end ()));
