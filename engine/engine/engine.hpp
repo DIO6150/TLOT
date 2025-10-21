@@ -11,8 +11,8 @@
 namespace Engine {
 
 	void Initialize () {
-		Globals::g_event_manager = new EventManager {};
-		Globals::g_script_api_proxy = new ScriptAPIProxy {Globals::g_event_manager};
+		Globals::g_event_manager 	= new EventManager {};
+		Globals::g_script_api_proxy 	= new ScriptAPIProxy {Globals::g_event_manager};
 
 		Globals::g_event_manager->RegisterScriptAPI (Globals::g_script_api_proxy);
 	}
@@ -51,7 +51,5 @@ namespace Engine {
 				++priority;
 			}
 		}
-
-		// ECS bit
 	}
 }

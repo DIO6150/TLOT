@@ -1,0 +1,1 @@
+g++ engine/*.cpp engine/vendor/glad/src/glad.c -Iengine -Iengine/vendor/glad/include -Iengine/vendor/ -Iengine/vendor/lua -Lengine/libs/linux/glfw3 -Lengine/libs/linux/lua -llua -lglfw3 -Wall -Werror -Wextra -g -std=c++23 -o bin/TheLegendofTeto

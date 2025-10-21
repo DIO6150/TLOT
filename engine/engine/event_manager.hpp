@@ -89,9 +89,7 @@ namespace Engine {
 					return;
 				}
 
-				if (result == EventResult::CONTINUE) {
-					should_continue = true;
-				}
+				should_continue = (result == EventResult::CONTINUE);
 			}
 
 			if (should_continue) {
@@ -166,7 +164,7 @@ namespace Engine {
 		}
 
 		bool IsQueueEmpty () {
-			return (m_event_queue.empty ());
+			return (m_event_queue.empty () || m_event_queue_back.empty ());
 		}
 
 	};

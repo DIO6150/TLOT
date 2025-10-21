@@ -105,19 +105,28 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 #include <json/json.hpp>
 
 #include <engine.hpp>
+#include <component_manager.hpp>
 
-using Entity = uint16_t;
+struct Position {
+	float x;
+	float y;
+	float z;
+};
 
 int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
 	
+	/*
 	Engine::Initialize ();
 	Engine::LoadConfig ("config.json");
 
 	for (;;) {
-		while (!Engine::GetEventManagerInstance ().IsQueueEmpty ()) {
-			Engine::GetEventManagerInstance ().ProcessEvents ();
-		}
+		Engine::GetEventManagerInstance ().ProcessEvents ();
 	}
+	*/
+
+	Engine::ComponentManager c_manager {};
+
+	c_manager.GenerateEntity<Position> ({0.0, 10.0, 20.0});
 
 	return (0);
 }

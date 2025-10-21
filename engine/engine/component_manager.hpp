@@ -60,6 +60,7 @@ namespace Engine {
 
 	};
 
+	template<class ... C>
 	class Archetype {
 		public:
 
@@ -115,34 +116,56 @@ namespace Engine {
 			assert (pos != m_archetypes.end ());
 			return (pos->second);
 		}
-		
-		template<typename ... T>
-		Archetype & GenerateArchetype () {
 
+		template<class ... T>
+		Archetype CreateArchetype (uint64_t uid) {
+			m_archetypes.insert ({uid, Archetype {uid}});
 		}
 		
+		template<typename ... T>
+		Archetype & GenerateArchetypeUID () {
+			uint64_t uid;
+
+			uid = compute_hash (typeid (T).name) ^ ...;
+		}
+		
+		uint64_t GenerateEntityUID () {
+			// Id cannot be 0 so we start at 1
+			for (uint64_t id = 1; id < MAX_ENTITIES; ++id) {
+				if (!m_entity_ids[id]) {
+					m_entity_ids[id] = true;
+					return (id);
+				}
+			}
+
+			return (0);
+		}
+
 		public:
 		ComponentManager () {
+			m_entity_ids.reserve (MAX_ENTITIES);
 			for (uint64_t id = 0; id < MAX_ENTITIES; ++id) {
 				m_entity_ids.push_back (false);
 			}
 		}
 		
 		template<class ... T>
-		Entity GenerateEntity (T ... components) {
+		Entity GenerateEntity (const T ... components) {
+			Archetype * archetype;
+
 			uint64_t entity_id;
 			uint64_t archetype_id;
 			
-			// Id cannot be 0 so we start at 1
-			for (uint64_t id = 1; id < MAX_ENTITIES; ++id) {
-				if (m_entity_ids[id]) { entity_id = id; break; }
+			entity_id 	= GenerateEntityUID ();
+			archetype_id 	= GenerateArchetypeUID ();
+
+			auto pos = m_archetypes.find (archetype_id);
+
+			if (pos == m_archetypes.end ()) {
+				
 			}
-			
-			Entity ent {entity_id};			
-			Archetype & archetype = GenerateArchetype (infos);
-			
-			archetype.AddEntity (ent, components);
-			
+
+			Entity ent {entity_id};
 			return (ent);
 		}
 	};

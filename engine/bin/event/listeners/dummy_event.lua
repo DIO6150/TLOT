@@ -16,7 +16,7 @@ end
 function OnDummy2 (event)
 	if event.counter == 5 then
 		CancelEvent ()
-		print ("I said stop 7")
+		print ("I said stop " .. event.counter)
 		PostImmediate (1, {target="entity1", guy="entity2", base_damage=10})
 		print ("help")
 	end
