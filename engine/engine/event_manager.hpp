@@ -160,8 +160,13 @@ namespace Engine {
 			}
 		}
 
+		// Probably very bugged; should cancel one event in the pile of events but in theory It might create a hole in the fabric of reality, idk i'm not a scientist
 		void CancelEvent () {
 			m_should_cancel = true;
+		}
+
+		bool IsQueueEmpty () {
+			return (m_event_queue.empty ());
 		}
 
 	};

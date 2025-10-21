@@ -1,5 +1,4 @@
 
-
 /*
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,8 +13,8 @@
 #include <scene.hpp>
 #include <mesh_manager.hpp>
 
-int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
-{
+
+int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv) {
 	GLFWwindow* window;
 
 	#ifdef __linux__
@@ -64,16 +63,17 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 		Engine::Scene scene;
 
 		Engine::MeshManager mesh_manager;
-		Engine::Mesh *planeMesh = mesh_manager.CreateMesh (vertices, indices);
+		Engine::Mesh * planeMesh = mesh_manager.CreateMesh (vertices, indices);
 
 		Engine::GameObject *plane1 = scene.CreateObject (
-		planeMesh, 
-		{
-			glm::mat4 {},
-			{1.0, 1.0, 1.0},
-			{0.0, 0.0, 0.0, 0.0},
-		},
-		&shader1);
+			planeMesh, 
+			{
+				glm::mat4 {},
+				{1.0, 1.0, 1.0},
+				{0.0, 0.0, 0.0, 0.0},
+			},
+			&shader1
+		);
 
 		if (!plane1) {
 			std::cout << "aahahahahaha\n";
@@ -108,15 +108,16 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 
 using Entity = uint16_t;
 
-int main (__attribute__((unused)) int argc, __attribute__((unused)) char ** argv) {
+int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
+	
 	Engine::Initialize ();
 	Engine::LoadConfig ("config.json");
 
-	for (int i = 0; i < 20; ++i) {
-		Engine::GetEventManagerInstance().ProcessEvents ();
+	for (;;) {
+		while (!Engine::GetEventManagerInstance ().IsQueueEmpty ()) {
+			Engine::GetEventManagerInstance ().ProcessEvents ();
+		}
 	}
-
-	std::cout << std::endl;
 
 	return (0);
 }

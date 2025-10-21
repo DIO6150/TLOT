@@ -110,17 +110,17 @@ inline std::string ReadFile (std::string path)
 
 // TODO: delete function
 inline uint64_t compute_hash(const std::string & s) {
-    const int p = 102013;
-    const int m = 1e9 + 9;
-    uint64_t hash_value = 0;
-    uint64_t p_pow = 1;
+	const int p = 102013;
+	const int m = 1e9 + 9;
+	uint64_t hash_value = 0;
+	uint64_t p_pow = 1;
 
-    for (char c : s) {
-        hash_value = (hash_value + (c - 'a' + 1) * p_pow) % m;
-        p_pow = (p_pow * p) % m;
-    }
+	for (char c : s) {
+		hash_value = (hash_value + (c - 'a' + 1) * p_pow) % m;
+		p_pow = (p_pow * p) % m;
+	}
 
-    return (hash_value);
+	return (hash_value);
 }
 
 

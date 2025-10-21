@@ -37,6 +37,7 @@ namespace Engine {
 		std::string event_config_raw = ReadFile (event_config_file);
 		nlohmann::json jevent_config = nlohmann::json::parse (event_config_raw);
 
+		// TODO: add a failsafe when data is corrupted
 		for (auto & events : jevent_config) {
 			uint32_t event_id = events["id"];
 			nlohmann::json listeners = events["listeners"];

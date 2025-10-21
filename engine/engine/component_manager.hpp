@@ -10,12 +10,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include <utils.hpp>
+
 #define MAX_ENTITIES 99999u
 
 
 namespace Engine {
-
-
 	struct Entity {
 		uint64_t entity_id;
 		uint64_t archetype_id;
@@ -28,97 +28,86 @@ namespace Engine {
 
 	};
 
-	struct ComponentArray {
-		void * 			m_components_ptr;
-		uint32_t 		m_component_count;
-		size_t	 		m_component_size;
+	struct ComponentArrayInterface {
+		
+	};
 
-		ComponentArray (size_t size) : m_component_count {0}, m_component_size {size} {
-			m_components_ptr = (void *) malloc (m_component_size * MAX_ENTITIES * sizeof (char));
+	template<class T>
+	class ComponentArray : ComponentArrayInterface {
+		public:
+		ComponentArray () : m_count (0) {
+
 		}
 
-		template<typename T>
 		T & Get (size_t index) {
-			assert (sizeof (T) == m_component_size);
-			assert (index > 0 && index < m_component_count);
-			return ((T *)m_components_ptr[index]);
+			assert (index > 0 && index < m_count);
+			return (m_ptr[index]);
 		}
 
-		template<typename T>
-		size_t InsertComponent (Entity entity, const T & component) {
-			assert (sizeof (T) == m_component_size);
-
-			if (m_component_count + 1 >= m_component_size) {
+		void Insert (Entity entity, const T & component) {
+			if (m_component_count + 1 >= MAX_ENTITIES) {
 				// TODO : ERROR
 			}
 
-			memcpy (m_components_ptr + m_component_size * m_component_count, &component, sizeof (component))
+			m_components_ptr[m_component_count] = component;
 
 			++m_component_count;
 		}
-	};
 
-	struct ComponentInfo {
-		size_t		m_size;
-		uint64_t	m_id;
+		private:
+		T * 		m_ptr;
+		size_t 		m_count;		
 
-		template<class T>
-		ComponentInfo () : m_size {sizeof (T)}, m_id {typeid (T)} {
-				
-		}
 	};
 
 	class Archetype {
-		private:
-		std::unordered_map<uint64_t, ComponentArray> m_components;
-
-
 		public:
 
-		Archetype (std::initializer_list<ComponentInfo> infos) {
+		Archetype (uint64_t uid) : m_uid (uid) {
 			m_components.reserve (16); // DISCLAIMER : arbitrary value
-			size_t index = 0;
-			for (auto & info : infos) {
-				m_components.emplace (info.m_id, info.m_size);
-			}
 		}
 
 		template<class T>
 		void AddComponent (Entity & entity, const T && component) {
-			ComponentInfo info {component};
+			uint64_t uid = compute_hash (typeid (component).name ())
 
-			assert (m_component_ids.find (info.m_id) != m_component_ids.end ());
+			assert (m_component.find (uid) != m_components.end ());
 
-
+			m_components.insert ({uid, component});
 		}
 
-		template<class ... T>
-		void AddEntity (Entity & entity, std::vector<ComponentInfo> infos, const T && ... components) {
-			int index = 0;
+		template<class ... Args>
+		bool AddEntity (Entity & entity, const Args && ... components) {
+			uint64_t uid = 0;
+
 			for (const auto & component : {components ...}) {
-				ComponentInfo & info = infos[index];
-				ComponentArray & array = m_components.at (info.m_id);
-
-				
-
-				++index;
+				uid ^= compute_hash (typeid (component).name);
 			}
+
+			if (uid != m_uid) return (false);
+
+			for (const auto & component : {components ...}) {
+				ComponentArray<decltype (component)> & array = m_components.at (compute_hash (typeid (component).name));
+				array.Insert (entity, component);
+			}
+
+			return (true);
 		}
+
+		uint64_t GetUID () {
+			return (m_uid);
+		}
+
+		private:
+		uint64_t 						m_uid;
+		std::unordered_map<uint64_t, ComponentArrayInterface>	m_components;
 	};
 
 	class ComponentManager {
 		private:
 		std::unordered_map<uint32_t, Archetype> m_archetypes;
 		std::vector<bool> 			m_entity_ids;
-
-		uint64_t GenerateArchetypeID (const std::vector<ComponentInfo> & infos) {
-			uint64_t archetype_id;
-			archetype_id = 0;
-
-			for (const auto & info : infos) {
-				archetype_id ^= info.m_id;
-			}
-		}
+		
 
 		Archetype & GetArchetype (uint64_t archetype_id) {
 			auto pos = m_archetypes.find (archetype_id);
@@ -126,31 +115,19 @@ namespace Engine {
 			assert (pos != m_archetypes.end ());
 			return (pos->second);
 		}
+		
+		template<typename ... T>
+		Archetype & GenerateArchetype () {
 
-		Archetype & GenerateArchetype (const std::vector<ComponentInfo> & infos) {
-			uint64_t archetype_id = GenerateArchetypeID (infos);
-
-			return (m_archetypes.emplace (archetype_id, infos).first->second);
 		}
-
-		template<class ... T>
-		std::vector<ComponentInfo> GenerateComponentInfos (T ... components) {
-			std::vector<ComponentInfo> infos;
-
-			for (const auto & component : {components...}) {
-				infos.push_back (ComponentInfo<decltype (component)> {})
-			}
-
-			return (infos);
-		}
-
+		
 		public:
 		ComponentManager () {
 			for (uint64_t id = 0; id < MAX_ENTITIES; ++id) {
 				m_entity_ids.push_back (false);
 			}
 		}
-
+		
 		template<class ... T>
 		Entity GenerateEntity (T ... components) {
 			uint64_t entity_id;
@@ -160,14 +137,12 @@ namespace Engine {
 			for (uint64_t id = 1; id < MAX_ENTITIES; ++id) {
 				if (m_entity_ids[id]) { entity_id = id; break; }
 			}
-
-			Entity ent {entity_id};
-			std::vector<ComponentInfo> infos = GenerateComponentInfos (components ...);
-
+			
+			Entity ent {entity_id};			
 			Archetype & archetype = GenerateArchetype (infos);
-
-			archetype.AddEntity (ent, infos, components ...);
-
+			
+			archetype.AddEntity (ent, components);
+			
 			return (ent);
 		}
 	};
