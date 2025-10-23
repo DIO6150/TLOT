@@ -60,7 +60,6 @@ namespace Engine {
 
 	};
 
-	template<class ... C>
 	class Archetype {
 		public:
 
