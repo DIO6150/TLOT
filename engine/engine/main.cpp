@@ -127,6 +127,5 @@ int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** ar
 	Engine::ComponentManager c_manager {};
 
 	c_manager.GenerateEntity<Position> ({0.0, 10.0, 20.0});
-
 	return (0);
 }

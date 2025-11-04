@@ -108,7 +108,7 @@ inline std::string ReadFile (std::string path)
 }
 
 
-// TODO: delete function
+// TODO: uhhh le hash en question
 inline uint64_t compute_hash(const std::string & s) {
 	const int p = 102013;
 	const int m = 1e9 + 9;
