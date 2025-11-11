@@ -11,7 +11,7 @@
 #include <vector>
 
 #include <utils.hpp>
-#include <details/uid_generator.hpp>
+#include <uid_generator.hpp>
 
 #define MAX_ENTITIES 99999u
 

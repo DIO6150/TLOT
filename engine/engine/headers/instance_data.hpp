@@ -2,7 +2,7 @@
 
 #include "glm/glm.hpp"
 
-namespace EngineDetail {
+namespace ED {
 	struct InstanceData {
 		glm::mat4 matrix;
 		glm::vec3 color;

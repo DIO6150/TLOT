@@ -1,7 +1,7 @@
 #include <scene.hpp>
 
-#include <details/batch.hpp>
-#include <details/draw_command.hpp>
+#include <batch.hpp>
+#include <draw_command.hpp>
 #include <game_object.hpp>
 #include <mesh.hpp>
 #include <layout.hpp>
@@ -15,14 +15,14 @@ Engine::Scene::Scene () {
 	m_batches.reserve (8);
 }
 
-EngineDetail::Batch *Engine::Scene::CreateBatch (Shader* shader_base) {
+ED::Batch *Engine::Scene::CreateBatch (Shader* shader_base) {
 	m_batches.emplace_back (new Layout { {{GL_FLOAT, 3}, {GL_FLOAT, 2}, {GL_FLOAT, 3}} }, shader_base);
 
 	return (&m_batches.back ());
 }
 
-Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, EngineDetail::InstanceData data, Shader *shader) {
-	EngineDetail::Batch *batch;
+Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, ED::InstanceData data, Shader *shader) {
+	ED::Batch *batch;
 	GameObject *object;
 
 	batch = GetBatch (shader);
@@ -39,8 +39,8 @@ Engine::GameObject *Engine::Scene::CreateObject (Mesh *mesh, EngineDetail::Insta
 	return (object);
 }
 
-EngineDetail::Batch *Engine::Scene::GetBatch (Shader *shader) {
-	auto pos = std::find_if (m_batches.begin (), m_batches.end (), [shader](EngineDetail::Batch &batch) -> bool {
+ED::Batch *Engine::Scene::GetBatch (Shader *shader) {
+	auto pos = std::find_if (m_batches.begin (), m_batches.end (), [shader](ED::Batch &batch) -> bool {
 		return (batch.GetShader () == shader);
 	});
 
@@ -59,8 +59,8 @@ void Engine::Scene::Render ()  {
 		
 		batch.m_shader->Use ();
 
-		batch.UploadDrawCommands ();
-		if (batch.m_should_resend_ssbo) { batch.UploadInstanceDataSSBO (); }
+		batch.syncCommands ();
+		if (batch.m_should_resend_ssbo) { batch.syncInstancesSSBO (); }
 		
 		glMultiDrawElementsIndirect (
 			GL_TRIANGLES,

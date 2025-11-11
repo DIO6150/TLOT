@@ -6,13 +6,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 #include <scene.hpp>
-#include <details/batch.hpp>
+#include <batch.hpp>
 
 Engine::GameObject::GameObject (
 	Mesh *				mesh, 
-	EngineDetail::InstanceData 	data,
+	ED::InstanceData 	data,
 	Scene *				scene,
-	EngineDetail::Batch *		batch
+	ED::Batch *		batch
 ) :
 	m_mesh		(mesh), 
 	m_data		(data),

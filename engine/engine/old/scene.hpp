@@ -8,8 +8,8 @@
 #include <mesh.hpp>
 #include <shader.hpp>
 
-#include <details/batch.hpp>
-#include <details/instance_data.hpp>
+#include <batch.hpp>
+#include <instance_data.hpp>
 
 
 namespace Engine {
@@ -18,11 +18,11 @@ namespace Engine {
 	class Scene {
 	private:
 		std::vector<GameObject> 			m_loaded_objects;
-		std::vector<EngineDetail::Batch>		m_batches;
+		std::vector<ED::Batch>		m_batches;
 
 
-		EngineDetail::Batch *	GetBatch 	(Shader *shader);
-		EngineDetail::Batch *	CreateBatch  	(Shader* shader_base);
+		ED::Batch *	GetBatch 	(Shader *shader);
+		ED::Batch *	CreateBatch  	(Shader* shader_base);
 
 		
 		
@@ -31,7 +31,7 @@ namespace Engine {
 	public:
 		Scene ();
 		
-		GameObject *	CreateObject (Mesh *mesh, EngineDetail::InstanceData data, Shader *shader);
+		GameObject *	CreateObject (Mesh *mesh, ED::InstanceData data, Shader *shader);
 		void		Render ();
 
 	};

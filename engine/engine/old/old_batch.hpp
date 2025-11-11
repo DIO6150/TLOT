@@ -15,7 +15,7 @@ namespace Engine {
 	class GameObject;
 }
 
-namespace EngineDetail
+namespace ED
 {
 	class Batch {
 	private:
@@ -50,7 +50,7 @@ namespace EngineDetail
 		friend					Engine::GameObject;
 
 
-		void UploadMesh (Engine::Mesh *mesh);
+		void addMesh (Engine::Mesh *mesh);
 		void Expand 	(Engine::Mesh *target_mesh);
 
 	public:
@@ -74,7 +74,7 @@ namespace EngineDetail
 
 		uint32_t GetHash () const; // UNUSED : maybe remove it ?
 
-		void UploadDrawCommands () const;
-		void UploadInstanceDataSSBO () const;
+		void syncCommands () const;
+		void syncInstancesSSBO () const;
 	};
 }

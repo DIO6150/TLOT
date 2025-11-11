@@ -41,7 +41,7 @@ struct std::hash<Engine::Entity> {
 	}
 };
 
-namespace EngineDetail {
+namespace ED {
 	// necessary to hold an array of different templated arguments
 	class IComponentArray {
 		public:

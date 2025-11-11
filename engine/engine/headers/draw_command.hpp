@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace EngineDetail {
+namespace ED {
 	struct DrawCommand {
 		uint32_t index_count;
 		uint32_t instance_count;

@@ -2,9 +2,9 @@
 
 #include <glm/glm.hpp>
 
-#include <details/instance_data.hpp>
+#include <instance_data.hpp>
 
-namespace EngineDetail {
+namespace ED {
 	class Batch;
 }
 
@@ -15,21 +15,21 @@ namespace Engine {
 	class GameObject {
 	private:
 		Mesh *				m_mesh;
-		EngineDetail::InstanceData 	m_data;
+		ED::InstanceData 	m_data;
 		
 		Scene *				m_parent_scene;
-		EngineDetail::Batch *		m_parent_batch;
+		ED::Batch *		m_parent_batch;
 
 		bool 				m_should_render;
 
 		friend 				Scene;
-		friend 				EngineDetail::Batch;
+		friend 				ED::Batch;
 
 		GameObject (
 			Mesh *				mesh,
-			EngineDetail::InstanceData 	data,
+			ED::InstanceData 	data,
 			Scene *				scene,
-			EngineDetail::Batch *		batch
+			ED::Batch *		batch
 		);
 
 	public:

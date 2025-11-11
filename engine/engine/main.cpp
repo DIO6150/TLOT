@@ -98,34 +98,15 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 */
 
 #include <iostream>
-#include <utils.hpp>
+#include <engine.hpp>
 
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 #include <json/json.hpp>
 
-#include <engine.hpp>
-#include <component_manager.hpp>
-
-struct Position {
-	float x;
-	float y;
-	float z;
-};
-
 int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
+
 	
-	/*
-	Engine::Initialize ();
-	Engine::LoadConfig ("config.json");
 
-	for (;;) {
-		Engine::GetEventManagerInstance ().ProcessEvents ();
-	}
-	*/
-
-	Engine::ComponentManager c_manager {};
-
-	c_manager.GenerateEntity<Position> ({0.0, 10.0, 20.0});
 	return (0);
 }
