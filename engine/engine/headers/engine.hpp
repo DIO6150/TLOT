@@ -34,7 +34,8 @@ namespace Engine {
 		Handle loadShader	(const std::string url, const ED::ShaderType type);
 		Handle loadGeometry	(const std::string url);
 
-		Handle createMesh	(const ED::Geometry * geometry);
+		Handle createMesh	(ED::Geometry & geometry);
+		void   removeMesh	(Handle mesh);
 
 		void render () const;
 
@@ -43,9 +44,13 @@ namespace Engine {
 		ResourceManager<ED::Texture>	m_texture;
 		ResourceManager<ED::Geometry>	m_geometry;
 		// ResourceManager<Animation>	m_animation;
-		
+
 		ResourceManager<ED::Mesh>	m_mesh;
 
+		
+		std::vector<ED::InstanceData>	m_data_array;
 		std::vector<ED::Batch>		m_batch_array;
+		
+		std::unordered_map<ED::Mesh *, ED::Batch *> m_mesh_location;
 	};
 }

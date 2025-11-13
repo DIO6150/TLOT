@@ -19,7 +19,7 @@ namespace ED
 {
 	class Batch {
 	private:
-		std::unordered_map<Engine::Mesh *, uint32_t>	m_instance_counter;
+		std::unordered_map<Engine::Mesh *, uint32_t>	m_geometry_counter;
 		std::vector<Engine::GameObject *>		m_loaded_objects;
 		
 		bool 						m_should_resend_ssbo;

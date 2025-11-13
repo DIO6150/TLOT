@@ -73,18 +73,19 @@ namespace Engine {
 
 		/*
 		// Optional: try_get pattern returning std::optional<std::reference_wrapper<T>>
-		std::optional<std::reference_wrapper<T>> try_get(Handle h) noexcept {
+		std::optional<std::reference_wrapper<T>> try_get (Handle h) noexcept {
 			T* p = get(h);
 			if (p) return std::optional<std::reference_wrapper<T>>(*p);
 			return std::nullopt;
 		}
 		*/
 
-		bool isValid(Handle h) const noexcept {
+		bool isValid (Handle h) const noexcept {
 			if (!h.valid()) return (false);
 			if (h.index >= storage.size ()) return (false);
 			if (version[h.index] != h.version) return (false);
 			if (!storage[h.index]) return (false);
+			
 			return (true);
 		}
 

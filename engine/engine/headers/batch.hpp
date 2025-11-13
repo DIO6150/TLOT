@@ -10,6 +10,7 @@
 
 #include <glm/glm.hpp>
 
+#include <draw_command.hpp>
 #include <geometry.hpp>
 #include <mesh.hpp>
 #include <resource_manager.hpp>
@@ -20,11 +21,6 @@
 namespace ED {
 	struct DrawCommandCPU {
 		DrawCommand command;
-		bool dirty;
-	};
-
-	struct InstanceDataCPU {
-		InstanceData * data;
 		bool dirty;
 	};
 
@@ -49,6 +45,8 @@ namespace ED {
 		void removeMesh (Mesh & mesh);
 		void removeGeometry (Geometry * geometry);
 
+		void modifyMesh (Mesh * mesh);
+
 		~Batch ();
 
 		Batch (const Batch & other) = delete;
@@ -71,12 +69,14 @@ namespace ED {
 		std::unordered_map<std::string, uint32_t>	m_texture_map_handles;	// texture name in shader code -> opengl id of the object handle
 		std::unordered_map<ShaderType, uint32_t>	m_shaders_handles;	// shader role -> opengl id of the object handle
 
-		std::unordered_map<Geometry *, size_t>				m_indices;
-		std::vector<Geometry *>						m_instances;
-		std::unordered_map<Geometry *, std::unordered_set<Mesh *>>	m_meshes;
+		std::unordered_map<Geometry *, size_t>		m_geometry_indices;
+		std::vector<Geometry *>				m_geometry_instances;
+		std::unordered_map<Geometry *, size_t>		m_geometry_count;
+		std::vector<DrawCommandCPU>			m_commands_mirror;
 
-		std::vector<DrawCommandCPU>	m_commands_mirror;
-		std::vector<InstanceDataCPU>	m_instance_mirror;
+		std::unordered_map<Mesh *, size_t>		m_mesh_indices;
+		std::vector<InstanceData>			m_mesh_instances;
+		std::vector<bool>				m_mesh_dirty;
 
 		uint32_t	m_vertex_buffer_size;
 		uint32_t	m_index_buffer_size;

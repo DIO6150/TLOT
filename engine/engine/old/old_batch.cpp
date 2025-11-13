@@ -14,7 +14,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 ED::Batch & ED::Batch::operator= (const ED::Batch other) {
-	m_instance_counter = other.m_instance_counter;
+	m_geometry_counter = other.m_geometry_counter;
 	m_loaded_objects = other.m_loaded_objects;
 
 	m_should_resend_ssbo = other.m_should_resend_ssbo;
@@ -131,12 +131,12 @@ ED::Batch::Batch (Engine::Layout *&& layout, std::vector<Engine::Mesh *> & meshe
 
 
 	for (auto &mesh : meshes) {
-		if (m_instance_counter.find (mesh) != m_instance_counter.end ()) continue;
+		if (m_geometry_counter.find (mesh) != m_geometry_counter.end ()) continue;
 
 		vertices.insert (vertices.end (), mesh->vertices.begin (), mesh->vertices.end ());
 		indices .insert (indices .end (), mesh->indices .begin (), mesh->indices .end ());
 
-		m_instance_counter.insert ({mesh, 0});
+		m_geometry_counter.insert ({mesh, 0});
 	}
 
 
@@ -173,13 +173,13 @@ ED::Batch::~Batch () {
 
 void ED::Batch::UploadGameObject (Engine::GameObject * object) {
 	std::unordered_map<Engine::Mesh *, uint32_t>::iterator pos;
-	if ((pos = m_instance_counter.find (object->m_mesh)) == m_instance_counter.end ()) {
+	if ((pos = m_geometry_counter.find (object->m_mesh)) == m_geometry_counter.end ()) {
 		// Uploading new geometry to the gpu
 		Expand (object->m_mesh);
 
 		addMesh (object->m_mesh);
 
-		m_instance_counter.insert ({object->m_mesh, 1});
+		m_geometry_counter.insert ({object->m_mesh, 1});
 		std::cout << "new geometry uploaded\n";
 	}
 	else {
@@ -275,7 +275,7 @@ void ED::Batch::syncCommands () const {
 	instance_offset 	= 0;
 	draw_commands_offset 	= 0;
 
-	for (const auto &[mesh, instance_count] : m_instance_counter) {
+	for (const auto &[mesh, instance_count] : m_geometry_counter) {
 		command.index_count     = mesh->indices.size ();
 		command.instance_count  = instance_count;
 		command.base_index      = index_offset;

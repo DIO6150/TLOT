@@ -31,7 +31,7 @@ void Engine::GameObject::Show () {
 	if (m_should_render) return;
 
 	++m_parent_batch->m_visible_mesh_count;
-	++m_parent_batch->m_instance_counter [m_mesh];
+	++m_parent_batch->m_geometry_counter [m_mesh];
 	m_should_render = true;
 	m_parent_batch->m_should_resend_ssbo = true;
 }
@@ -40,7 +40,7 @@ void Engine::GameObject::Hide () {
 	if (!m_should_render) return;
 
 	--m_parent_batch->m_visible_mesh_count;
-	--m_parent_batch->m_instance_counter [m_mesh];
+	--m_parent_batch->m_geometry_counter [m_mesh];
 	m_should_render = false;
 	m_parent_batch->m_should_resend_ssbo = true;
 }

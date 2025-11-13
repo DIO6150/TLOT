@@ -7,6 +7,7 @@
 
 #include <glm/glm.hpp>
 
+#include <engine_types.hpp>
 #include <geometry.hpp>
 #include <vertex.hpp>
 #include <instance_data.hpp>
@@ -14,10 +15,15 @@
 namespace ED {
 	class Mesh {
 	public:
-		Mesh (Geometry & geometry);
+		Mesh ();
 
+	protected:
 		bool		visible;
-		InstanceData	data;
+		InstanceData *	data;
 		Geometry *	geometry;
+
+	private:
+		friend class Batch;
+		friend class Engine::Engine;
 	};
 }
