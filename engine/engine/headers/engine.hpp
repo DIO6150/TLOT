@@ -26,7 +26,22 @@
 
 */
 
+
 namespace Engine {
+	struct EngineDebugStat {
+		uint32_t failed_removal;
+
+		EngineDebugStat () : 
+			failed_removal (0)
+		{
+
+		}
+
+		void print () {
+			std::cout << "Failed to remove " << failed_removal << " mesh(es)\n";
+		}
+	};
+
 	class Engine {
 	public:
 		Engine ();
@@ -34,10 +49,12 @@ namespace Engine {
 		Handle loadShader	(const std::string url, const ED::ShaderType type);
 		Handle loadGeometry	(const std::string url);
 
-		Handle createMesh	(ED::Geometry & geometry);
+		Handle createMesh	(Handle geometry_handle);
 		void   removeMesh	(Handle mesh);
 
 		void render () const;
+
+		EngineDebugStat stat;
 
 	private:
 		ResourceManager<ED::Shader>	m_shader;

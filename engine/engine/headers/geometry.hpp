@@ -10,7 +10,7 @@
 namespace ED {
 	class Geometry {
 	public:
-		Geometry ();
+		Geometry () {}
 
 		std::string		name;
 

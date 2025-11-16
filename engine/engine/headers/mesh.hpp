@@ -19,7 +19,7 @@ namespace ED {
 
 	protected:
 		bool		visible;
-		InstanceData *	data;
+
 		Geometry *	geometry;
 
 	private:

@@ -99,14 +99,36 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 
 #include <iostream>
 #include <engine.hpp>
+#include <ctime>
 
-#define SOL_ALL_SAFETIES_ON 1
-#include <sol/sol.hpp>
-#include <json/json.hpp>
+using namespace Engine;
+
+#define sample_size 25000
 
 int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
+	Handle meshs[sample_size];
+	std::clock_t dt;
 
+	Engine::Engine engine;
+
+	auto geometry = engine.loadGeometry ("tralala.glb");
 	
+	dt = std::clock ();
+	for (int i = 0; i < sample_size; ++i) {
+		meshs[i] = engine.createMesh (geometry);
+	}
+	dt = std::clock () - dt;
+	std::cout << "Creating " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";
+
+
+	dt = std::clock ();
+	for (int i = 0; i < sample_size; ++i) {
+		engine.removeMesh (meshs[i]);
+	}
+	dt = std::clock () - dt;
+	std::cout << "Destroying " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";
+
+	engine.stat.print ();
 
 	return (0);
 }

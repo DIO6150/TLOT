@@ -1,11 +1,27 @@
 #include <engine.hpp>
 
-Engine::Handle Engine::Engine::createMesh (ED::Geometry & geometry) {
+Engine::Engine::Engine () {
+
+}
+
+Engine::Handle Engine::Engine::loadShader (__attribute__ ((unused)) const std::string url, __attribute__ ((unused)) const ED::ShaderType type) {
+	// TODO: fix shader import
+	return (m_shader.create ());
+}
+
+Engine::Handle Engine::Engine::loadGeometry (__attribute__ ((unused)) const std::string url) {
+	// TODO: fix geometry import
+	return (m_geometry.create ());
+}
+
+Engine::Handle Engine::Engine::createMesh (Handle geometry_handle) {
+	ED::Geometry & geometry = m_geometry.getRef (geometry_handle);
+
 	Handle resource = m_mesh.create ();
 	
 	auto position = m_data_array.insert (m_data_array.begin () + resource.index, {});
 
-	ED::Mesh & mesh = m_mesh.getRef (resource);
+	ED::Mesh * mesh = m_mesh.getRef (resource);
 	mesh.geometry = &geometry;
 	mesh.data = position.base ();
 
@@ -17,6 +33,7 @@ void Engine::Engine::removeMesh (Handle mesh) {
 	ED::Mesh  * ptr		= m_mesh.get (mesh);
 
 	if (!ptr) {
+		++stat.failed_removal;
 		return;
 	}
 
@@ -28,5 +45,5 @@ void Engine::Engine::removeMesh (Handle mesh) {
 		location->removeMesh (*ptr);
 	}
 
-	bool result = m_mesh.destroy (mesh);
+	m_mesh.destroy (mesh);
 }

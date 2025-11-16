@@ -37,12 +37,12 @@ namespace ED {
 		void bind ();
 		void unbind ();
 
-		void addMesh (Mesh & mesh);
+		void addMesh (Mesh * mesh);
 		
 		void syncCommands ();
 		void syncInstances ();
 
-		void removeMesh (Mesh & mesh);
+		void removeMesh (Mesh * mesh);
 		void removeGeometry (Geometry * geometry);
 
 		void modifyMesh (Mesh * mesh);
@@ -72,9 +72,11 @@ namespace ED {
 		std::unordered_map<Geometry *, size_t>		m_geometry_indices;
 		std::vector<Geometry *>				m_geometry_instances;
 		std::unordered_map<Geometry *, size_t>		m_geometry_count;
-		std::vector<DrawCommandCPU>			m_commands_mirror;
+		std::vector<DrawCommand>			m_commands;
+		std::vector<bool>				m_commands_dirty;
 
 		std::unordered_map<Mesh *, size_t>		m_mesh_indices;
+		std::unordered_map<size_t, Mesh *>		m_mesh_indices_mirror;
 		std::vector<InstanceData>			m_mesh_instances;
 		std::vector<bool>				m_mesh_dirty;
 
@@ -84,6 +86,10 @@ namespace ED {
 
 
 		/* METHODS */
+
+		void initInstanceData (Mesh * mesh);
+		void updateInstanceData ();
+		void removeInstanceData (Mesh * mesh);
 
 		void createDrawCommand (Geometry * geometry);
 		void increaseDrawCommmand (Geometry * geometry);

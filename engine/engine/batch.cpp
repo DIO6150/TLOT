@@ -76,19 +76,21 @@ ED::Batch::Batch () {
 	glNamedBufferData (m_dibo,  dibo_size, NULL, GL_DYNAMIC_DRAW);
 
 	glBindBuffer (GL_SHADER_STORAGE_BUFFER, m_instance_ssbo);
-	glNamedBufferData (m_instance_ssbo, MAX_INSTANCE_COUNT * sizeof (ED::InstanceData), NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (m_instance_ssbo, MAX_INSTANCE_COUNT * sizeof (InstanceData), NULL, GL_DYNAMIC_DRAW);
 
 	unbind ();
 
 	m_mesh_instances.reserve (MAX_INSTANCE_COUNT);
 }
 
-ED::Batch & ED::Batch::attachShader (Shader & shader) {
-
+ED::Batch & ED::Batch::attachShader (__attribute__ ((unused)) Shader & shader) {
+	// TODO: fix attachShader
+	return (*this);
 }
 
-ED::Batch & ED::Batch::attachTexture (Texture & texture) {
-
+ED::Batch & ED::Batch::attachTexture (__attribute__ ((unused)) Texture & texture) {
+	// TODO: fix attachTexture
+	return (*this);
 }
 
 void ED::Batch::bind () {
@@ -107,8 +109,8 @@ void ED::Batch::unbind () {
 	glBindBuffer (GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void ED::Batch::addMesh (Mesh & mesh) {
-	Geometry * geometry = mesh.geometry;
+void ED::Batch::addMesh (Mesh * mesh) {
+	Geometry * geometry = mesh->geometry;
 
 	if (!m_geometry_indices.count (geometry)) {
 
@@ -118,7 +120,7 @@ void ED::Batch::addMesh (Mesh & mesh) {
 
 		createDrawCommand (geometry);
 
-		m_mesh_indices	.insert 	({&mesh, m_mesh_instances.size ()});
+		m_mesh_indices	.insert 	({mesh, m_mesh_instances.size ()});
 		m_mesh_instances.push_back	({});
 		m_mesh_dirty	.push_back 	(true);
 
@@ -128,22 +130,36 @@ void ED::Batch::addMesh (Mesh & mesh) {
 	++m_geometry_count.at (geometry);
 
 	increaseDrawCommmand (geometry);
+
+	initInstanceData (mesh);
 }
 
 void ED::Batch::syncCommands () {
-	size_t i = 0;
+	size_t range_begin = 0;
+	size_t range_count = 0;
+	size_t index = 0;
 
-	for (DrawCommandCPU & cpu_command : m_commands_mirror) {
-		++i;
+	for (const auto & dirty : m_mesh_dirty) {
+		if (dirty) {
+			if (range_count == 0) {
+				range_begin = index;
+			}
+			++range_count;
+		}
+		else if (range_count > 0) {
 
-		if (!cpu_command.dirty) continue;
+			glNamedBufferSubData (
+				m_dibo, 
+				range_begin * sizeof (DrawCommand),
+				range_count * sizeof (DrawCommand),
+				(void *) m_commands.data ()
+			);
 
-		glNamedBufferSubData (
-			m_dibo, 
-			i * sizeof (DrawCommand),
-			sizeof (DrawCommand),
-			(void *) &cpu_command.command
-		);
+			range_begin = 0;
+			range_count = 0;
+		}
+
+		++index;
 	}
 }
 
@@ -175,28 +191,32 @@ void ED::Batch::syncInstances () {
 	}
 }
 
-void ED::Batch::removeMesh (Mesh & mesh) {
-	--m_geometry_count.at (mesh.geometry);
+void ED::Batch::removeMesh (Mesh * mesh) {
+	--m_geometry_count.at (mesh->geometry);
 	
-	decreaseDrawcommand (mesh.geometry);
+	decreaseDrawcommand (mesh->geometry);
+
+	removeInstanceData (mesh);
 }
 
 void ED::Batch::removeGeometry (Geometry * geometry) {
 	size_t idx = m_geometry_indices.at (geometry);
 
-	Geometry *& last = m_geometry_instances.back ();
-	DrawCommandCPU & last_command = m_commands_mirror.back ();
+	Geometry *& 	last 		= m_geometry_instances.back ();
+	DrawCommand & 	last_command 	= m_commands.back ();
 	
 	if (last != geometry) {
 		std::swap (m_geometry_instances.at (idx), last);
-		std::swap (m_commands_mirror.at (idx), last_command);
+		std::swap (m_commands.at (idx), last_command);
+		m_commands_dirty.swap (m_commands_dirty.at (idx), m_commands_dirty.back ());
 		m_geometry_indices.at (last) = idx;
 	}
 	
-	m_geometry_instances.pop_back ();
-	m_commands_mirror.pop_back ();
-	m_geometry_indices.erase (geometry);
-	m_geometry_count.erase (geometry);
+	m_geometry_instances	.pop_back ();
+	m_commands		.pop_back ();
+	m_commands_dirty	.pop_back ();
+	m_geometry_indices	.erase (geometry);
+	m_geometry_count	.erase (geometry);
 
 	removeDrawCommands (idx);
 }
@@ -207,9 +227,37 @@ void ED::Batch::modifyMesh (Mesh * mesh) {
 	m_mesh_dirty[idx] = true;
 }
 
+void ED::Batch::initInstanceData (Mesh * mesh) {
+	size_t idx = m_mesh_indices.size ();
+
+	m_mesh_indices		.insert ({mesh, idx});
+	m_mesh_indices_mirror	.insert ({idx, mesh});
+	m_mesh_instances[idx] 	= InstanceData {};
+	m_mesh_dirty[idx] 	= true;
+}
+
+void ED::Batch::updateInstanceData () {
+	for (const auto & [mesh, idx] : m_mesh_indices) {
+
+	}
+}
+
+void ED::Batch::removeInstanceData (Mesh * mesh) {
+	size_t idx 	= m_mesh_indices	.at (mesh);
+	Mesh * last 	= m_mesh_indices_mirror	.at (m_mesh_indices.size () - 1);
+
+	std::swap (m_mesh_instances.at (idx), m_mesh_instances.back ());
+	m_mesh_dirty.swap (m_mesh_dirty.at (idx), m_mesh_dirty.back ());
+	m_mesh_instances.pop_back ();	
+	m_mesh_dirty.pop_back ();
+
+	m_mesh_indices[last] = idx;
+	m_mesh_indices_mirror[idx] = last;
+}
+
 void ED::Batch::createDrawCommand (Geometry * geometry) {
 	uint32_t instance_count = m_geometry_count.at (geometry);
-	const DrawCommand & last = m_commands_mirror.back ().command;
+	const DrawCommand & last = m_commands.back ();
 
 	DrawCommand command;
 	command.index_count     = geometry->indices.size ();
@@ -218,24 +266,25 @@ void ED::Batch::createDrawCommand (Geometry * geometry) {
 	command.base_vertex     = geometry->vertices.size () + last.base_vertex;
 	command.base_instance   = instance_count + last.base_instance;
 
-	m_commands_mirror.push_back ({command, true});
+	m_commands.push_back (command);
+	m_commands_dirty.push_back (true);
 }
 
 void ED::Batch::increaseDrawCommmand (Geometry * geometry) {
 	size_t idx = m_geometry_indices.at (geometry);
 	
-	for (size_t i = idx; i < m_commands_mirror.size (); ++i) {
-		m_commands_mirror[i].command.base_instance++;
-		m_commands_mirror[i].dirty = true;
+	for (size_t i = idx; i < m_commands.size (); ++i) {
+		m_commands[i].base_instance++;
+		m_commands_dirty[i] = true;
 	}
 }
 
 void ED::Batch::decreaseDrawcommand (Geometry * geometry) {
 	size_t idx = m_geometry_indices.at (geometry);
 	
-	for (size_t i = idx; i < m_commands_mirror.size (); ++i) {
-		m_commands_mirror[i].command.base_instance--;
-		m_commands_mirror[i].dirty = true;
+	for (size_t i = idx; i < m_commands.size (); ++i) {
+		m_commands[i].base_instance--;
+		m_commands_dirty[i] = true;
 	}
 }
 
@@ -244,23 +293,23 @@ void ED::Batch::removeDrawCommands (size_t from) {
 	uint32_t base_index 	= 0;
 	uint32_t base_instance 	= 0;
 
-	if (from != 0) {
-		base_vertex 	= m_commands_mirror[from - 1].command.base_vertex;
-		base_index 	= m_commands_mirror[from - 1].command.base_index;
-		base_instance 	= m_commands_mirror[from - 1].command.base_instance;
+	if (from >= 1) {
+		base_vertex 	= m_commands[from - 1].base_vertex;
+		base_index 	= m_commands[from - 1].base_index;
+		base_instance 	= m_commands[from - 1].base_instance;
 	}
 
-	for (int i = from; i < m_commands_mirror.size (); ++i) {
-		uint32_t instance_count = m_geometry_count.at (m_geometry_instances[i]);
-		m_commands_mirror[i].command.base_index      = base_index;
-		m_commands_mirror[i].command.base_vertex     = base_vertex;
-		m_commands_mirror[i].command.base_instance   = base_instance;
+	for (size_t i = from; i < m_commands.size (); ++i) {
+		uint32_t instance_count		= m_geometry_count.at (m_geometry_instances[i]);
+		m_commands[i].base_index	= base_index;
+		m_commands[i].base_vertex	= base_vertex;
+		m_commands[i].base_instance	= base_instance;
 
 		base_index    += m_geometry_instances[i]->indices .size ();
 		base_vertex   += m_geometry_instances[i]->vertices.size ();
 		base_instance += instance_count;
 
-		m_commands_mirror[i].dirty = true;
+		m_commands_dirty[i] = true;
 	}
 }
 

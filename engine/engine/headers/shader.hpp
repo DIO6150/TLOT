@@ -11,6 +11,7 @@ namespace ED {
 
 	class Shader {
 	public:
+		Shader () : type (ShaderType::VERTEX) {}
 		Shader (const std::string & url, const ShaderType && type);
 		
 
