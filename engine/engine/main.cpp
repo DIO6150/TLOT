@@ -106,16 +106,20 @@ using namespace Engine;
 #define sample_size 25000
 
 int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
+	Engine::Engine engine;
+
 	Handle meshs[sample_size];
 	std::clock_t dt;
 
-	Engine::Engine engine;
+
+	Engine::Scene * scene = engine.createScene ();
 
 	auto geometry = engine.loadGeometry ("tralala.glb");
+	auto material = engine.createMaterial ();
 	
 	dt = std::clock ();
 	for (int i = 0; i < sample_size; ++i) {
-		meshs[i] = engine.createMesh (geometry);
+		meshs[i] = scene->createMesh (geometry, material);
 	}
 	dt = std::clock () - dt;
 	std::cout << "Creating " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";
@@ -123,7 +127,7 @@ int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** ar
 
 	dt = std::clock ();
 	for (int i = 0; i < sample_size; ++i) {
-		engine.removeMesh (meshs[i]);
+		scene->removeMesh (meshs[i]);
 	}
 	dt = std::clock () - dt;
 	std::cout << "Destroying " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";

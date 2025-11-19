@@ -2,11 +2,14 @@
 
 namespace Engine {
 	class Engine;
+	class Scene;
 }
 
 namespace ED {
-	class Mesh;
-	class Geometry;
-	class InstanceData;
+	class Batch;
 	class DrawCommand;
+	class InstanceData;
+	class Geometry;
+	class Mesh;
+	struct Material;
 }

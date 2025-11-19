@@ -14,36 +14,11 @@ Engine::Handle Engine::Engine::loadGeometry (__attribute__ ((unused)) const std:
 	return (m_geometry.create ());
 }
 
-Engine::Handle Engine::Engine::createMesh (Handle geometry_handle) {
-	ED::Geometry & geometry = m_geometry.getRef (geometry_handle);
-
-	Handle resource = m_mesh.create ();
-	
-	auto position = m_data_array.insert (m_data_array.begin () + resource.index, {});
-
-	ED::Mesh * mesh = m_mesh.getRef (resource);
-	mesh.geometry = &geometry;
-	mesh.data = position.base ();
-
-	return (resource);
+Engine::Handle Engine::Engine::createMaterial () {
+	// TODO: fix create material
+	return (m_material.create ());
 }
 
-void Engine::Engine::removeMesh (Handle mesh) {
-	ED::Batch * location	= nullptr;
-	ED::Mesh  * ptr		= m_mesh.get (mesh);
-
-	if (!ptr) {
-		++stat.failed_removal;
-		return;
-	}
-
-	auto position = m_mesh_location.find (ptr);
-
-	if (position != m_mesh_location.end ()) {
-		location = position->second;
-
-		location->removeMesh (*ptr);
-	}
-
-	m_mesh.destroy (mesh);
+Engine::Scene * Engine::Engine::createScene () {
+	m_scenes.emplace_back (m_geometry);
 }

@@ -13,6 +13,7 @@
 #include <batch.hpp>
 #include <geometry.hpp>
 #include <mesh.hpp>
+#include <scene.hpp>
 #include <shader.hpp>
 #include <texture.hpp>
 #include <resource_manager.hpp>
@@ -49,8 +50,9 @@ namespace Engine {
 		Handle loadShader	(const std::string url, const ED::ShaderType type);
 		Handle loadGeometry	(const std::string url);
 
-		Handle createMesh	(Handle geometry_handle);
-		void   removeMesh	(Handle mesh);
+		Handle createMaterial ();
+
+		Scene * createScene();
 
 		void render () const;
 
@@ -60,14 +62,8 @@ namespace Engine {
 		ResourceManager<ED::Shader>	m_shader;
 		ResourceManager<ED::Texture>	m_texture;
 		ResourceManager<ED::Geometry>	m_geometry;
-		// ResourceManager<Animation>	m_animation;
+		ResourceManager<ED::Material>	m_material;
 
-		ResourceManager<ED::Mesh>	m_mesh;
-
-		
-		std::vector<ED::InstanceData>	m_data_array;
-		std::vector<ED::Batch>		m_batch_array;
-		
-		std::unordered_map<ED::Mesh *, ED::Batch *> m_mesh_location;
+		std::vector<Scene>		m_scenes;
 	};
 }

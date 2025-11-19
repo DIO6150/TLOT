@@ -19,11 +19,6 @@
 #include <vertex.hpp>
 
 namespace ED {
-	struct DrawCommandCPU {
-		DrawCommand command;
-		bool dirty;
-	};
-
 	class Batch {
 	public:
 		Batch ();

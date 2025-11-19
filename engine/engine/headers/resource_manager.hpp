@@ -12,7 +12,18 @@ namespace Engine {
 		uint32_t index;
 		uint32_t version;
 
-		bool operator== (Handle const& o) const noexcept {
+		Handle () : Handle (UINT32_MAX, 0) {
+
+		}
+
+		Handle (uint32_t index, uint32_t version):
+			index (index),
+			version (version)
+		{
+
+		}
+
+		bool operator== (Handle const & o) const noexcept {
 			return (index == o.index && version == o.version);
 		}
 
@@ -108,4 +119,19 @@ namespace Engine {
 		std::vector<uint32_t> free_list;    // stack of free indices
 	};
 
+}
+
+namespace std {
+	template<> struct less <Engine::Handle> {
+		bool operator() (const Engine::Handle & a, const Engine::Handle & b) const {
+			return (a.index < b.index && a.version < b.version);
+		}
+	};
+
+	template<>
+	struct hash<Engine::Handle> {
+	std::size_t operator()(const Engine::Handle& h) const noexcept {
+		return (std::size_t(h.index) << 1) ^ std::size_t(h.version);
+	}
+	};
 }

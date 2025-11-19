@@ -1,8 +1,8 @@
 #include <mesh.hpp>
 
-ED::Mesh::Mesh () : 
+ED::Mesh::Mesh (Engine::Scene * parent) : 
 	visible 	{true},
-	data 		{nullptr},
-	geometry 	{nullptr} {
+	geometry 	{nullptr},
+	parent 		{parent} {
 
 }

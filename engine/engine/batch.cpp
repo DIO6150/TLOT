@@ -4,6 +4,8 @@
 
 #include <glad/glad.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #define MAX_INSTANCE_COUNT 65536
 
 ED::Batch::Batch () {
@@ -237,7 +239,16 @@ void ED::Batch::initInstanceData (Mesh * mesh) {
 }
 
 void ED::Batch::updateInstanceData () {
+
 	for (const auto & [mesh, idx] : m_mesh_indices) {
+		if (!mesh->dirty) continue;
+
+		InstanceData & data = m_mesh_instances.at (idx);
+
+		data.matrix = glm::mat4 (1.0f);
+		data.matrix = glm::translate (data.matrix, mesh->position);
+		data.matrix = glm::rotate (data.matrix, mesh->rotation);
+		data.matrix = glm::scale (data.matrix, mesh->position);
 
 	}
 }
