@@ -17,8 +17,8 @@ namespace Engine {
 		}
 
 		Handle (uint32_t index, uint32_t version):
-			index (index),
-			version (version)
+			index {index},
+			version {version}
 		{
 
 		}
@@ -41,6 +41,12 @@ namespace Engine {
 	public:
 		ResourceManager () = default;
 		~ResourceManager () = default;
+
+		ResourceManager (const ResourceManager &) = delete;
+		ResourceManager & operator= (const ResourceManager &) = delete;
+
+		ResourceManager (ResourceManager &&) noexcept = default;
+		ResourceManager & operator= (ResourceManager &&) noexcept = default;
 
 		template<typename... Args>
 		Handle create (Args&&... args) {
@@ -130,8 +136,8 @@ namespace std {
 
 	template<>
 	struct hash<Engine::Handle> {
-	std::size_t operator()(const Engine::Handle& h) const noexcept {
-		return (std::size_t(h.index) << 1) ^ std::size_t(h.version);
-	}
+		std::size_t operator()(const Engine::Handle & h) const {
+			return (std::size_t(h.index) << 1) ^ std::size_t(h.version);
+		}
 	};
 }

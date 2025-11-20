@@ -82,7 +82,7 @@ ED::Batch::Batch () {
 
 	unbind ();
 
-	m_mesh_instances.reserve (MAX_INSTANCE_COUNT);
+	m_instances.reserve (MAX_INSTANCE_COUNT);
 }
 
 ED::Batch & ED::Batch::attachShader (__attribute__ ((unused)) Shader & shader) {
@@ -112,28 +112,46 @@ void ED::Batch::unbind () {
 }
 
 void ED::Batch::addMesh (Mesh * mesh) {
-	Geometry * geometry = mesh->geometry;
-
-	if (!m_geometry_indices.count (geometry)) {
-
-		m_geometry_indices	.insert 	({geometry, m_geometry_instances.size () });
-		m_geometry_instances	.push_back 	(geometry);
-		m_geometry_count	.insert 	({geometry, 1});
-
-		createDrawCommand (geometry);
-
-		m_mesh_indices	.insert 	({mesh, m_mesh_instances.size ()});
-		m_mesh_instances.push_back	({});
-		m_mesh_dirty	.push_back 	(true);
-
+	if (m_geometry_indices.find (mesh->geometry) == m_geometry_indices.end ()) {
+		createGeometry (mesh->geometry);
+		createInstance (mesh);
+		
 		return;
 	}
 
-	++m_geometry_count.at (geometry);
+	createInstance (mesh);
+}
 
-	increaseDrawCommmand (geometry);
+void ED::Batch::removeMesh (Mesh * mesh) {
+	removeInstance (mesh);
+}
 
-	initInstanceData (mesh);
+void ED::Batch::syncInstances () {
+	size_t range_begin = 0;
+	size_t range_count = 0;
+	size_t index = 0;
+
+	for (const auto & [mesh, dirty] : m_mesh_entries) {
+		if (dirty) {
+			if (range_count == 0) {
+				range_begin = index;
+			}
+			++range_count;
+		}
+		else if (range_count > 0) {
+			glNamedBufferSubData (
+				m_instance_ssbo,
+				range_begin * sizeof (InstanceData),
+				range_count * sizeof (InstanceData),
+				(void*) m_instances.data ()
+			);
+
+			range_begin = 0;
+			range_count = 0;
+		}
+
+		++index;
+	}
 }
 
 void ED::Batch::syncCommands () {
@@ -141,7 +159,7 @@ void ED::Batch::syncCommands () {
 	size_t range_count = 0;
 	size_t index = 0;
 
-	for (const auto & dirty : m_mesh_dirty) {
+	for (const auto & [geometry, count, dirty] : m_geometry_entries) {
 		if (dirty) {
 			if (range_count == 0) {
 				range_begin = index;
@@ -165,163 +183,137 @@ void ED::Batch::syncCommands () {
 	}
 }
 
-void ED::Batch::syncInstances () {
-	size_t range_begin = 0;
-	size_t range_count = 0;
-	size_t index = 0;
+/*
+void ED::Batch::updateTransformation (Mesh * mesh) {
+	uint32_t idx = m_mesh_indices.at (mesh);
+	InstanceData & data = m_mesh_instances.at (idx);
 
-	for (const auto & dirty : m_mesh_dirty) {
-		if (dirty) {
-			if (range_count == 0) {
-				range_begin = index;
-			}
-			++range_count;
-		}
-		else if (range_count > 0) {
-			glNamedBufferSubData (
-				m_instance_ssbo,
-				range_begin * sizeof (InstanceData),
-				range_count * sizeof (InstanceData),
-				(void*) m_mesh_instances.data ()
-			);
-
-			range_begin = 0;
-			range_count = 0;
-		}
-
-		++index;
-	}
-}
-
-void ED::Batch::removeMesh (Mesh * mesh) {
-	--m_geometry_count.at (mesh->geometry);
-	
-	decreaseDrawcommand (mesh->geometry);
-
-	removeInstanceData (mesh);
-}
-
-void ED::Batch::removeGeometry (Geometry * geometry) {
-	size_t idx = m_geometry_indices.at (geometry);
-
-	Geometry *& 	last 		= m_geometry_instances.back ();
-	DrawCommand & 	last_command 	= m_commands.back ();
-	
-	if (last != geometry) {
-		std::swap (m_geometry_instances.at (idx), last);
-		std::swap (m_commands.at (idx), last_command);
-		m_commands_dirty.swap (m_commands_dirty.at (idx), m_commands_dirty.back ());
-		m_geometry_indices.at (last) = idx;
-	}
-	
-	m_geometry_instances	.pop_back ();
-	m_commands		.pop_back ();
-	m_commands_dirty	.pop_back ();
-	m_geometry_indices	.erase (geometry);
-	m_geometry_count	.erase (geometry);
-
-	removeDrawCommands (idx);
-}
-
-void ED::Batch::modifyMesh (Mesh * mesh) {
-	size_t idx = m_mesh_indices.at (mesh);
+	data.matrix = glm::mat4 (1.0f);
+	data.matrix = glm::translate (data.matrix, mesh->position);
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.z, glm::vec3 (0.0, 0.0, 1.0));
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.y, glm::vec3 (0.0, 1.0, 0.0));
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.x, glm::vec3 (1.0, 0.0, 0.0));
+	data.matrix = glm::scale (data.matrix, mesh->position);
 
 	m_mesh_dirty[idx] = true;
 }
 
-void ED::Batch::initInstanceData (Mesh * mesh) {
-	size_t idx = m_mesh_indices.size ();
+void ED::Batch::updateTransformationUpload (Mesh * mesh) {
+	uint32_t idx = m_mesh_indices.at (mesh);
+	InstanceData & data = m_mesh_instances.at (idx);
 
-	m_mesh_indices		.insert ({mesh, idx});
-	m_mesh_indices_mirror	.insert ({idx, mesh});
-	m_mesh_instances[idx] 	= InstanceData {};
-	m_mesh_dirty[idx] 	= true;
+	data.matrix = glm::mat4 (1.0f);
+	data.matrix = glm::translate (data.matrix, mesh->position);
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.z, glm::vec3 (0.0, 0.0, 1.0));
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.y, glm::vec3 (0.0, 1.0, 0.0));
+	data.matrix = glm::rotate (data.matrix, mesh->rotation.x, glm::vec3 (1.0, 0.0, 0.0));
+	data.matrix = glm::scale (data.matrix, mesh->position);
+
+	glNamedBufferSubData (
+		m_instance_ssbo,
+		sizeof (InstanceData) * idx,
+		sizeof (glm::mat4),
+		(void*) m_mesh_instances.data ()
+	);
+
+	// TODO : to the thing below maybe
+	// should create a flag for each individual InstanceData components ?
+	// rather than packing everything together maybe get rid of InstanceData
+	// and create a SSBO for each component
+	// that way everything is still tightly packed and we can proceed
+	// with dirty flag for each ssbo without breaking linearity
+	m_mesh_dirty[idx] = true;
+}
+*/
+
+void ED::Batch::createInstance (Mesh * mesh) {
+	m_mesh_indices.try_emplace (mesh, m_instances.size ());
+
+	m_mesh_entries.emplace_back (mesh, true);
+
+	m_instances.emplace_back (
+		mesh->position,
+		mesh->rotation,
+		mesh->scale
+	);
+
+	increaseGeometry (mesh->geometry);
 }
 
-void ED::Batch::updateInstanceData () {
+void ED::Batch::removeInstance (Mesh * mesh) {
+	size_t idx = m_mesh_indices.at (mesh);
 
-	for (const auto & [mesh, idx] : m_mesh_indices) {
-		if (!mesh->dirty) continue;
+	if (idx != m_mesh_indices.size () - 1) {
+		std::swap (m_mesh_entries.at (idx), m_mesh_entries.back ());
+		std::swap (m_instances.at (idx), m_instances.back ());
+		
+		m_mesh_indices.at (m_mesh_entries.at (idx).origin) = idx;
+	}
 
-		InstanceData & data = m_mesh_instances.at (idx);
+	m_mesh_entries.pop_back ();
+	m_instances.pop_back ();
 
-		data.matrix = glm::mat4 (1.0f);
-		data.matrix = glm::translate (data.matrix, mesh->position);
-		data.matrix = glm::rotate (data.matrix, mesh->rotation);
-		data.matrix = glm::scale (data.matrix, mesh->position);
+	m_mesh_indices.erase (mesh);
+
+	decreaseGeometry (mesh->geometry);
+}
+
+void ED::Batch::createGeometry (Geometry * geometry) {
+	uint32_t	base_index;
+	uint32_t	base_vertex;
+	uint32_t	base_instance;
+	
+	if (m_commands.empty ()) {
+		base_index 	= 0;
+		base_vertex 	= 0;
+		base_instance 	= 0;
+	}
+	else {
+		const DrawCommand & last = m_commands.back ();
+		base_index 	= last.base_index;
+		base_vertex 	= last.base_vertex;
+		base_instance 	= last.base_instance;
 
 	}
+
+	m_geometry_indices.try_emplace (geometry, m_commands.size ());
+
+	m_geometry_entries.emplace_back (geometry, 0, true);
+
+	m_commands.emplace_back (
+		geometry->indices.size (),
+		0,
+		geometry->indices .size () + base_index,
+		geometry->vertices.size () + base_vertex,
+		base_instance
+	);
 }
 
-void ED::Batch::removeInstanceData (Mesh * mesh) {
-	size_t idx 	= m_mesh_indices	.at (mesh);
-	Mesh * last 	= m_mesh_indices_mirror	.at (m_mesh_indices.size () - 1);
-
-	std::swap (m_mesh_instances.at (idx), m_mesh_instances.back ());
-	m_mesh_dirty.swap (m_mesh_dirty.at (idx), m_mesh_dirty.back ());
-	m_mesh_instances.pop_back ();	
-	m_mesh_dirty.pop_back ();
-
-	m_mesh_indices[last] = idx;
-	m_mesh_indices_mirror[idx] = last;
-}
-
-void ED::Batch::createDrawCommand (Geometry * geometry) {
-	uint32_t instance_count = m_geometry_count.at (geometry);
-	const DrawCommand & last = m_commands.back ();
-
-	DrawCommand command;
-	command.index_count     = geometry->indices.size ();
-	command.instance_count  = instance_count;
-	command.base_index      = geometry->indices .size () + last.base_index;
-	command.base_vertex     = geometry->vertices.size () + last.base_vertex;
-	command.base_instance   = instance_count + last.base_instance;
-
-	m_commands.push_back (command);
-	m_commands_dirty.push_back (true);
-}
-
-void ED::Batch::increaseDrawCommmand (Geometry * geometry) {
+void ED::Batch::increaseGeometry (Geometry * geometry) {
 	size_t idx = m_geometry_indices.at (geometry);
+
+	++m_geometry_entries[idx].count;
 	
 	for (size_t i = idx; i < m_commands.size (); ++i) {
-		m_commands[i].base_instance++;
-		m_commands_dirty[i] = true;
+		m_geometry_entries[i].dirty = true;
+		++m_commands[i].instance_count;
 	}
 }
 
-void ED::Batch::decreaseDrawcommand (Geometry * geometry) {
+void ED::Batch::decreaseGeometry (Geometry * geometry) {
 	size_t idx = m_geometry_indices.at (geometry);
+
+	--m_geometry_entries[idx].count;
 	
 	for (size_t i = idx; i < m_commands.size (); ++i) {
-		m_commands[i].base_instance--;
-		m_commands_dirty[i] = true;
+		m_geometry_entries[i].dirty = true;
+		--m_commands[i].instance_count;
 	}
 }
 
-void ED::Batch::removeDrawCommands (size_t from) {
-	uint32_t base_vertex 	= 0;
-	uint32_t base_index 	= 0;
-	uint32_t base_instance 	= 0;
-
-	if (from >= 1) {
-		base_vertex 	= m_commands[from - 1].base_vertex;
-		base_index 	= m_commands[from - 1].base_index;
-		base_instance 	= m_commands[from - 1].base_instance;
-	}
-
-	for (size_t i = from; i < m_commands.size (); ++i) {
-		uint32_t instance_count		= m_geometry_count.at (m_geometry_instances[i]);
-		m_commands[i].base_index	= base_index;
-		m_commands[i].base_vertex	= base_vertex;
-		m_commands[i].base_instance	= base_instance;
-
-		base_index    += m_geometry_instances[i]->indices .size ();
-		base_vertex   += m_geometry_instances[i]->vertices.size ();
-		base_instance += instance_count;
-
-		m_commands_dirty[i] = true;
-	}
+void ED::Batch::removeGeometry (Geometry * geometry) {
+	// TODO: fix removeGeometry
+	printf ("%p", geometry);
 }
 
 ED::Batch::~Batch () {
@@ -330,49 +322,4 @@ ED::Batch::~Batch () {
 	glDeleteBuffers 	(1, &m_ebo);
 	glDeleteBuffers 	(1, &m_dibo);
 	glDeleteBuffers 	(1, &m_instance_ssbo);
-}
-
-
-ED::Batch::Batch (Batch && other) {
-	m_vao 		= other.m_vao;
-	m_vbo 		= other.m_vbo;
-	m_ebo 		= other.m_ebo;
-	m_dibo 		= other.m_dibo;
-	m_instance_ssbo = other.m_instance_ssbo;
-
-	m_texture_map_handles	.swap (other.m_texture_map_handles);
-	m_shaders_handles	.swap (other.m_shaders_handles);
-
-	m_vertex_buffer_size 	= other.m_vertex_buffer_size;
-	m_index_buffer_size 	= other.m_index_buffer_size;
-	m_mesh_count 		= other.m_mesh_count;
-
-	other.m_vao 		= 0;
-	other.m_vbo 		= 0;
-	other.m_ebo 		= 0;
-	other.m_dibo 		= 0;
-	other.m_instance_ssbo 	= 0;
-}
-
-ED::Batch & ED::Batch::operator= (Batch && other) {
-	m_vao 		= other.m_vao;
-	m_vbo 		= other.m_vbo;
-	m_ebo 		= other.m_ebo;
-	m_dibo 		= other.m_dibo;
-	m_instance_ssbo = other.m_instance_ssbo;
-
-	m_texture_map_handles	.swap (other.m_texture_map_handles);
-	m_shaders_handles	.swap (other.m_shaders_handles);
-
-	m_vertex_buffer_size 	= other.m_vertex_buffer_size;
-	m_index_buffer_size 	= other.m_index_buffer_size;
-	m_mesh_count 		= other.m_mesh_count;
-
-	other.m_vao 		= 0;
-	other.m_vbo 		= 0;
-	other.m_ebo 		= 0;
-	other.m_dibo 		= 0;
-	other.m_instance_ssbo 	= 0;
-
-	return (*this);
 }

@@ -101,11 +101,50 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 #include <engine.hpp>
 #include <ctime>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#define TITLE "The Legend of Teto"
+#define SIZE_W 800
+#define SIZE_H 800
+
 using namespace Engine;
 
-#define sample_size 25000
+#define sample_size 1000
 
 int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** argv) {
+
+	GLFWwindow* window;
+
+	#ifdef __linux__
+	glfwInitHint (GLFW_PLATFORM, GLFW_PLATFORM_X11);
+	#endif
+
+	if (!glfwInit ()) exit (-1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+
+	window = glfwCreateWindow (SIZE_W, SIZE_H, TITLE, NULL, NULL);
+	if (!window) {
+		glfwTerminate ();
+		exit (-1);
+	}
+	glfwMakeContextCurrent (window);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		exit (-1);
+	}
+
+	glViewport (0, 0, SIZE_W, SIZE_H);
+	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+
+	//enableOpenGLDebugCallback ();
+
+
+
 	Engine::Engine engine;
 
 	Handle meshs[sample_size];
@@ -124,6 +163,7 @@ int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** ar
 	dt = std::clock () - dt;
 	std::cout << "Creating " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";
 
+	scene->printStats ();
 
 	dt = std::clock ();
 	for (int i = 0; i < sample_size; ++i) {
@@ -132,6 +172,7 @@ int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** ar
 	dt = std::clock () - dt;
 	std::cout << "Destroying " << sample_size << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms \n";
 
+	scene->printStats ();
 	engine.stat.print ();
 
 	return (0);

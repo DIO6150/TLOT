@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 
 #include <draw_command.hpp>
+#include <engine_types.hpp>
 #include <geometry.hpp>
 #include <mesh.hpp>
 #include <resource_manager.hpp>
@@ -31,16 +32,12 @@ namespace ED {
 
 		void bind ();
 		void unbind ();
-
-		void addMesh (Mesh * mesh);
 		
-		void syncCommands ();
-		void syncInstances ();
-
+		void addMesh (Mesh * mesh);
 		void removeMesh (Mesh * mesh);
-		void removeGeometry (Geometry * geometry);
 
-		void modifyMesh (Mesh * mesh);
+		void syncInstances ();
+		void syncCommands ();
 
 		~Batch ();
 
@@ -49,11 +46,22 @@ namespace ED {
 		Batch & operator= (const Batch & other) = delete;
 		Batch & operator= (Batch & other) = delete;
 
-		Batch (Batch && other);
-		Batch & operator= (Batch && other);
+		Batch (Batch && other) = default;
+		Batch & operator= (Batch && other) = default;
 
 	private:
 		/* MEMBERS */
+
+		struct GeometryEntry {
+			Geometry * 	origin;
+			size_t		count;
+			bool		dirty;
+		};
+
+		struct MeshEntry {
+			Mesh * 	origin;
+			bool	dirty;
+		};
 
 		uint32_t	m_vao;
 		uint32_t	m_vbo;
@@ -65,15 +73,12 @@ namespace ED {
 		std::unordered_map<ShaderType, uint32_t>	m_shaders_handles;	// shader role -> opengl id of the object handle
 
 		std::unordered_map<Geometry *, size_t>		m_geometry_indices;
-		std::vector<Geometry *>				m_geometry_instances;
-		std::unordered_map<Geometry *, size_t>		m_geometry_count;
+		std::vector<GeometryEntry>			m_geometry_entries;
 		std::vector<DrawCommand>			m_commands;
-		std::vector<bool>				m_commands_dirty;
-
+		
 		std::unordered_map<Mesh *, size_t>		m_mesh_indices;
-		std::unordered_map<size_t, Mesh *>		m_mesh_indices_mirror;
-		std::vector<InstanceData>			m_mesh_instances;
-		std::vector<bool>				m_mesh_dirty;
+		std::vector<MeshEntry>				m_mesh_entries;
+		std::vector<InstanceData>			m_instances;
 
 		uint32_t	m_vertex_buffer_size;
 		uint32_t	m_index_buffer_size;
@@ -82,16 +87,21 @@ namespace ED {
 
 		/* METHODS */
 
-		void initInstanceData (Mesh * mesh);
-		void updateInstanceData ();
-		void removeInstanceData (Mesh * mesh);
+		void createInstance	(Mesh * mesh);
+		void removeInstance	(Mesh * mesh);
 
-		void createDrawCommand (Geometry * geometry);
-		void increaseDrawCommmand (Geometry * geometry);
-		void decreaseDrawcommand (Geometry * geometry);
-		void removeDrawCommands (size_t from);
+		void createGeometry	(Geometry * geometry);
+		void increaseGeometry	(Geometry * geometry);
+		void decreaseGeometry	(Geometry * geometry);
+		void removeGeometry	(Geometry * geometry);
 
-		void compileShaders ();
-		void recompileShader (const ShaderType && type);
+		//void updateTransformationUpload (Mesh * mesh);
+		//void updateTransformation (Mesh * mesh);
+
+
+		// void compileShaders ();
+		// void recompileShader (const ShaderType && type);
+
+		friend class Engine::Scene;
 	};
 }

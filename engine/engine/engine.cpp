@@ -20,5 +20,6 @@ Engine::Handle Engine::Engine::createMaterial () {
 }
 
 Engine::Scene * Engine::Engine::createScene () {
-	m_scenes.emplace_back (m_geometry);
+	auto & scene = m_scenes.emplace_back (m_geometry);
+	return (&scene);
 }

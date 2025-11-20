@@ -16,7 +16,13 @@ namespace ED {
 	class Mesh {
 	public:
 		Mesh ();
-		Mesh (Engine::Scene * parent);
+		Mesh (
+			Engine::Scene * parent,
+			ED::Geometry  * geometry,
+			glm::vec3	position,
+			glm::vec3	rotation,
+			glm::vec3	scale
+		);
 
 	protected:
 		bool		visible;
@@ -27,8 +33,6 @@ namespace ED {
 		glm::vec3	position;
 		glm::vec3	rotation;
 		glm::vec3	scale;
-
-		bool 		dirty;
 
 		Engine::Scene *	parent;
 

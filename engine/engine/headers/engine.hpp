@@ -12,6 +12,7 @@
 
 #include <batch.hpp>
 #include <geometry.hpp>
+#include <material.hpp>
 #include <mesh.hpp>
 #include <scene.hpp>
 #include <shader.hpp>
