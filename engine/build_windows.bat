@@ -1,1 +1,0 @@
-g++ engine/*.cpp engine/vendor/glad/src/glad.c -Iengine/headers -Iengine/vendor/glad/include -Iengine/vendor/ -Iengine/vendor/lua -Lengine/libs/windows/glfw3 -Lengine/libs/windows/lua -llua -lglfw3 -lgdi32 -lopengl32 -Wall -Werror -Wextra -g -O0 -std=c++23 -o bin/TheLegendofTeto.exe
