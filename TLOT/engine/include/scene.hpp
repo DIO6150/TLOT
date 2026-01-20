@@ -9,7 +9,7 @@
 namespace Engine {
 	class Scene {
 	public:
-		Scene (ResourceManager<ED::Geometry> & geometry);
+		Scene (ResourceManager<ED::Geometry> * geometry);
 
 		Handle 	createMesh (Handle geometry, Handle material_handle);
 		void 	removeMesh (Handle mesh);

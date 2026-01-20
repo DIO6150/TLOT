@@ -1,7 +1,8 @@
 #include <scene.hpp>
 
-Engine::Scene::Scene (ResourceManager<ED::Geometry> & geometry) :
-	m_geometry {&geometry}
+Engine::Scene::Scene (ResourceManager<ED::Geometry> * geometry) :
+	m_geometry {geometry},
+	m_failed_removal {0}
 {
 	
 }
@@ -63,8 +64,9 @@ void Engine::Scene::removeMesh (Handle mesh) {
 }
 
 void Engine::Scene::printStats () {
+	printf ("--------------------------------------------------------------------------------------------------\n");
 	printf ("[Batch Info]\n");
-	printf ("There is %llu batch(es)\n", m_batch_array.size ());
+	printf ("There is %lu batch(es)\n", m_batch_array.size ());
 
 	size_t index = 0;
 	for (const auto & [material, batch] : m_batch_array) {
@@ -75,7 +77,7 @@ void Engine::Scene::printStats () {
 		size_t mis  = batch->m_mesh_indices.size ();
 		size_t mes  = batch->m_mesh_entries.size () * sizeof (ED::Batch::MeshEntry);
 		size_t inss = batch->m_instances.size () * sizeof (ED::InstanceData); 
-		printf ("\t[%llu]\t{GIS: %llu elements; GES: %llu bytes; CMDS: %llu bytes}\n\t\t{MIS: %llu elements; MES: %llu bytes; INSS: %llu bytes}\n", 
+		printf ("\t[%lu]\t{GIS: %lu elements; GES: %lu bytes; CMDS: %lu bytes}\n\t\t{MIS: %lu elements; MES: %lu bytes; INSS: %lu bytes}\n", 
 				index,
 				gis, ges, cmds,
 				mis, mes, inss
@@ -86,4 +88,6 @@ void Engine::Scene::printStats () {
 
 	printf ("[Miscellaneous]\n");
 	printf ("Failed to remove %d mesh(es).\n", m_failed_removal);
+
+	printf ("--------------------------------------------------------------------------------------------------\n");
 }

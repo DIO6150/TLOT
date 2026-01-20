@@ -31,16 +31,12 @@
 
 namespace Engine {
 	struct EngineDebugStat {
-		uint32_t failed_removal;
-
-		EngineDebugStat () : 
-			failed_removal (0)
-		{
+		EngineDebugStat () {
 
 		}
 
 		void print () {
-			std::cout << "Failed to remove " << failed_removal << " mesh(es)\n";
+			
 		}
 	};
 

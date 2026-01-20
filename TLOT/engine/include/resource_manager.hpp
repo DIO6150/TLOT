@@ -20,7 +20,7 @@ namespace Engine {
 			index {index},
 			version {version}
 		{
-
+			
 		}
 
 		bool operator== (Handle const & o) const noexcept {

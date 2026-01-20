@@ -3,7 +3,8 @@
 # ========================
 
 # Output
-BIN      := bin/teto.exe
+BIN_WINDOWS	:= bin/teto.exe
+BIN_LINUX	:= bin/teto.out
 
 # Folders
 ENGINE_SRC := engine/src
@@ -15,16 +16,24 @@ VENDOR_SRC := vendor
 VENDOR_INC := vendor
 
 # Libs
-LIBS      := -lassimp -llua -lglfw3 -lgdi32 -lopengl32
+LIBS_WINDOWS 	:= -lassimp -llua -lglfw3 -lgdi32 -lopengl32
+LIBS_LINUX 	:= -lassimp -llua -lglfw3
+
+# Windows vs Linux
 ifeq ($(OS), Windows_NT)
-LIBDIRS   := -Llibs/windows/glfw3 -Llibs/windows/lua -Llibs/windows/assimp
+LIBDIRS	:= -Llibs/windows/glfw3 -Llibs/windows/lua -Llibs/windows/assimp
+LIBS	:= $(LIBS_WINDOWS)
+BIN	:= $(BIN_WINDOWS)
 else
-LIBDIRS   := -Llibs/linux
+LIBDIRS	:= -Llibs/linux/glfw3 -Llibs/linux/lua -Llibs/linux/assimp
+LIBS	:= $(LIBS_LINUX)
+BIN	:= $(BIN_LINUX)
 endif
 
 # Compiler
 CXX      := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra -Werror -I$(ENGINE_INC) -I$(VENDOR_INC)
+CXXFLAGS += -O0 -g -DDEBUG
 
 # Auto-detect .cpp files
 SRC := $(wildcard $(ENGINE_SRC)/*.cpp) \
@@ -57,9 +66,10 @@ $(BIN): $(OBJ)
 
 clean:
 ifeq ($(OS), Windows_NT)
-	del /q /s -rf engine\src\*.o bin\teto.exe
+# kindof broken but fuck cmd.exe
+	del /q /s -rf engine\src\*.o $(BIN_WINDOWS)
 else
-	rm -rf $(OBJ) $(BIN) bin/teto.exe
+	rm -rf $(OBJ) $(BIN)
 endif
 	
 
