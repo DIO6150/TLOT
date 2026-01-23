@@ -10,7 +10,8 @@
 namespace Engine {
 	class Scene {
 	public:
-		Scene (ResourceManager<ED::Geometry> & geometry);
+		Scene (ResourceManager<ED::Geometry> * geometry);
+		~Scene ();
 
 		Handle 	createMesh (Handle geometry, Handle material_handle);
 		void 	removeMesh (Handle mesh);
@@ -27,9 +28,11 @@ namespace Engine {
 		ResourceManager<ED::Geometry> *		m_geometry;
 		
 		ResourceManager<ED::Mesh> 		m_meshes;
-		std::unordered_map<Handle, ED::Batch *>	m_batch_array; // material_handle -> batch
 
-		std::unordered_map<Handle, ED::Batch *> m_mesh_location; // locate where a mesh instance is managed
+		std::vector<ED::Batch *>		m_batch_array;		// used for destruction purpose
+		std::unordered_map<Handle, ED::Batch *>	m_material_location;	// material_handle -> batch
+
+		std::unordered_map<Handle, ED::Batch *> m_mesh_location;	// locate where a mesh instance is managed
 
 		uint32_t	m_failed_removal;
 	};

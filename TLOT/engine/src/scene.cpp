@@ -1,19 +1,29 @@
 #include <scene.hpp>
 
-Engine::Scene::Scene (ResourceManager<ED::Geometry> & geometry) :
-	m_geometry {&geometry}
-{
+Engine::Scene::Scene (ResourceManager<ED::Geometry> * geometry) :
+	m_geometry {geometry},
+	m_failed_removal {0} {
 	
+}
+
+Engine::Scene::~Scene () {
+	printf ("destructor called.\n");
+	for (auto batch : m_batch_array) {
+		printf ("%p, %d\n", batch, batch->m_mesh_count);
+		delete batch;
+	}
 }
 
 Engine::Handle Engine::Scene::createMesh (Handle geometry_handle, Handle material_handle) {
 	ED::Batch 	* 	batch;
 
-	auto pos = m_batch_array.find (material_handle);
+	auto pos = m_material_location.find (material_handle);
 
-	if (pos == m_batch_array.end ()) {
-		batch = new ED::Batch ();
-		m_batch_array.emplace (material_handle, batch);
+	if (pos == m_material_location.end ()) {
+		batch = new ED::Batch {};
+		printf ("batch created with new : %p\n", batch);
+		m_material_location.emplace (material_handle, batch);
+		m_batch_array.push_back (batch);
 	}
 	else {
 		batch = pos->second;
@@ -32,6 +42,7 @@ Engine::Handle Engine::Scene::createMesh (Handle geometry_handle, Handle materia
 	ED::Mesh * mesh = m_meshes.get (resource);
 
 	if (!mesh) {
+		// TODO: print log + handle error
 		exit (EXIT_FAILURE);
 	}
 
@@ -63,11 +74,12 @@ void Engine::Scene::removeMesh (Handle mesh) {
 }
 
 void Engine::Scene::printStats () {
+	printf ("--------------------------------------------------------------------------------------------------\n");
 	printf ("[Batch Info]\n");
-	printf ("There is %llu batch(es)\n", m_batch_array.size ());
+	printf ("There is %lu batch(es)\n", m_material_location.size ());
 
 	size_t index = 0;
-	for (const auto & [material, batch] : m_batch_array) {
+	for (const auto & [material, batch] : m_material_location) {
 		size_t gis  = batch->m_geometry_indices.size ();
 		size_t ges  = batch->m_geometry_entries.size () * sizeof (ED::Batch::GeometryEntry);
 		size_t cmds = batch->m_commands.size () * sizeof (ED::DrawCommand);
@@ -75,7 +87,7 @@ void Engine::Scene::printStats () {
 		size_t mis  = batch->m_mesh_indices.size ();
 		size_t mes  = batch->m_mesh_entries.size () * sizeof (ED::Batch::MeshEntry);
 		size_t inss = batch->m_instances.size () * sizeof (ED::InstanceData); 
-		printf ("\t[%llu]\t{GIS: %llu elements; GES: %llu bytes; CMDS: %llu bytes}\n\t\t{MIS: %llu elements; MES: %llu bytes; INSS: %llu bytes}\n", 
+		printf ("\t[%lu]\t{GIS: %lu elements; GES: %lu bytes; CMDS: %lu bytes}\n\t\t{MIS: %lu elements; MES: %lu bytes; INSS: %lu bytes}\n", 
 				index,
 				gis, ges, cmds,
 				mis, mes, inss
@@ -86,4 +98,6 @@ void Engine::Scene::printStats () {
 
 	printf ("[Miscellaneous]\n");
 	printf ("Failed to remove %d mesh(es).\n", m_failed_removal);
+
+	printf ("--------------------------------------------------------------------------------------------------\n");
 }

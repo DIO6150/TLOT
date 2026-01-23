@@ -6,9 +6,7 @@ The Legend of Teto (this game will not be about Kasane Teto, I just saw a Zelda 
 
 ## Building
 
-Building for windows: ```.\build_windows.bat``` (I just gave up on making a makefile for both linux and windows)
-
-~~Building for linux: ```make```~~ (Too bad ! The make file is empty right now)
+Building : ```make``` at project root directory. Modify the makefile to fit your needs.
 
 # TODO
 

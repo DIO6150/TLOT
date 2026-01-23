@@ -20,7 +20,7 @@ namespace Engine {
 			index {index},
 			version {version}
 		{
-
+			
 		}
 
 		bool operator== (Handle const & o) const noexcept {
@@ -40,7 +40,9 @@ namespace Engine {
 	class ResourceManager {
 	public:
 		ResourceManager () = default;
-		~ResourceManager () = default;
+		~ResourceManager () {
+			printf ("resource manager destroyed.\n");
+		};
 
 		ResourceManager (const ResourceManager &) = delete;
 		ResourceManager & operator= (const ResourceManager &) = delete;
@@ -49,7 +51,7 @@ namespace Engine {
 		ResourceManager & operator= (ResourceManager &&) noexcept = default;
 
 		template<typename... Args>
-		Handle create (Args&&... args) {
+		Handle create (const std::string & name, Args&&... args) {
 			uint32_t idx;
 			
 			if (!free_list.empty ()) {
@@ -57,12 +59,14 @@ namespace Engine {
 				free_list.pop_back ();
 				storage[idx] = std::make_unique<T> (std::forward<Args> (args)...);
 				// version[idx] stays as is (was incremented on destroy)
+				id.push_back (name);
 			}
 
 			else {
 				idx = static_cast<uint32_t> (storage.size());
 				storage.push_back (std::make_unique<T> (std::forward<Args> (args)...));
 				version.push_back (0);
+				id.push_back (name);
 			}
 			return (Handle { idx, version[idx] });
 		}
@@ -71,6 +75,7 @@ namespace Engine {
 			if (!isValid(h)) return (false);
 
 			storage[h.index].reset ();           // free the resource
+			id[h.index].clear ();
 			++version[h.index];                 // bump version to invalidate old handles
 			free_list.push_back (h.index);       // reclaim index
 
@@ -120,9 +125,10 @@ namespace Engine {
 		}
 
 	private:
-		std::vector<std::unique_ptr<T>> storage;
-		std::vector<uint32_t> version;      // per-index version counter
-		std::vector<uint32_t> free_list;    // stack of free indices
+		std::vector<std::unique_ptr<T>>		storage;
+		std::vector<std::string>		id;
+		std::vector<uint32_t>			version;	// per-index version counter
+		std::vector<uint32_t>			free_list;	// stack of free indices
 	};
 
 }
