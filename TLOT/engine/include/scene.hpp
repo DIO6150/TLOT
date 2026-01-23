@@ -2,8 +2,9 @@
 
 #include <vector>
 
-#include <batch.hpp>
-#include <mesh.hpp>
+#include <details/batch.hpp>
+#include <details/mesh.hpp>
+
 #include <resource_manager.hpp>
 
 namespace Engine {

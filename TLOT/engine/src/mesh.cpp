@@ -1,4 +1,4 @@
-#include <mesh.hpp>
+#include <details/mesh.hpp>
 
 ED::Mesh::Mesh () : 
 Mesh (

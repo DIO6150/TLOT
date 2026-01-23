@@ -1,6 +1,6 @@
-#include <batch.hpp>
-#include <draw_command.hpp>
-#include <instance_data.hpp>
+#include <details/batch.hpp>
+#include <details/draw_command.hpp>
+#include <details/instance_data.hpp>
 
 #include <glad/glad.h>
 

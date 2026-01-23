@@ -156,7 +156,7 @@ int main (__attribute__ ((unused)) int argc, __attribute__ ((unused)) char ** ar
 
 	Engine::Scene * scene = engine.createScene ();
 
-	auto geometry = engine.loadGeometry ("tralala.glb");
+	auto geometry = engine.loadGeometry ("tralala.geo");
 	auto material = engine.createMaterial ();
 	
 	dt = std::clock ();

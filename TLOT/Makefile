@@ -57,7 +57,7 @@ $(BIN): $(OBJ)
 
 clean:
 ifeq ($(OS), Windows_NT)
-	del /q /s -rf engine\src\*.o bin\teto.exe
+	del /q /s -rf engine\src\*.o engine\vendor\glad\src\glad.o bin\teto.exe
 else
 	rm -rf $(OBJ) $(BIN) bin/teto.exe
 endif

@@ -10,13 +10,14 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include <batch.hpp>
-#include <geometry.hpp>
-#include <material.hpp>
-#include <mesh.hpp>
+#include <details/batch.hpp>
+#include <details/geometry.hpp>
+#include <details/material.hpp>
+#include <details/mesh.hpp>
+#include <details/shader.hpp>
+#include <details/texture.hpp>
+
 #include <scene.hpp>
-#include <shader.hpp>
-#include <texture.hpp>
 #include <resource_manager.hpp>
 
 /*

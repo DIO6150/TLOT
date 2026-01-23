@@ -1,5 +1,5 @@
-#include <script_api.hpp>
-#include <event_manager.hpp>
+#include <details/script_api.hpp>
+#include <details/event_manager.hpp>
 
 #include <stdio.h>
 

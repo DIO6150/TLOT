@@ -1,4 +1,4 @@
-#include <instance_data.hpp>
+#include <details/instance_data.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
