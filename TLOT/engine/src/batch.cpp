@@ -8,7 +8,14 @@
 
 #define MAX_INSTANCE_COUNT 65536
 
-ED::Batch::Batch () {
+ED::Batch::Batch () :	m_vao {0},
+			m_vbo {0},
+			m_ebo {0},
+			m_dibo {0},
+			m_instance_ssbo {0},
+			m_vertex_buffer_size {0},
+			m_index_buffer_size {0},
+			m_mesh_count {0} {
 	size_t vbo_size;
 	size_t ebo_size;
 	size_t dibo_size;
@@ -322,4 +329,6 @@ ED::Batch::~Batch () {
 	glDeleteBuffers 	(1, &m_ebo);
 	glDeleteBuffers 	(1, &m_dibo);
 	glDeleteBuffers 	(1, &m_instance_ssbo);
+
+	printf ("Batch destroyed.\n");
 }

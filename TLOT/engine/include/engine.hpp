@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
 #include <batch.hpp>
@@ -43,9 +44,12 @@ namespace Engine {
 	class Engine {
 	public:
 		Engine ();
+		~Engine ();
 
 		Handle loadShader	(const std::string url, const ED::ShaderType type);
 		Handle loadGeometry	(const std::string url);
+
+		void   loadSceneAssimp	(const std::string url);
 
 		Handle createMaterial ();
 
@@ -62,5 +66,7 @@ namespace Engine {
 		ResourceManager<ED::Material>	m_material;
 
 		std::vector<Scene>		m_scenes;
+
+		GLFWwindow *			window;
 	};
 }
