@@ -8,7 +8,7 @@ BIN_LINUX	:= bin/teto.out
 
 # Folders
 ENGINE_SRC := src
-ENGINE_INC := include
+ENGINE_INC := -Iinclude
 
 VENDOR_SRC := vendor
 VENDOR_INC := vendor
@@ -30,8 +30,8 @@ endif
 
 # Compiler
 CXX      := g++
-CXXFLAGS := -std=c++23 -Wall -Wextra -I$(ENGINE_INC) -I$(VENDOR_INC) $(GAME_INC)
-CXXFLAGS += -O0 -g -DDEBUG
+CXXFLAGS := -std=c++23 -Wall -Wextra $(ENGINE_INC) -I$(VENDOR_INC) $(GAME_INC)
+CXXFLAGS += -g -DDEBUG -O0
 
 # Auto-detect .cpp files
 SRC := $(wildcard $(ENGINE_SRC)/*.cpp) \

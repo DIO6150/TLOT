@@ -1,111 +1,244 @@
-#include <engine/texture.hpp>
-#include <engine/utils.hpp>
+#include <engine/data/Texture.hpp>
 
+#include <engine/utils/Utils.hpp>
 
-Engine::Texture::Texture () : data {nullptr}, width {0}, height {0}, type {Engine::TexType::NONE}, quad {nullptr}, key {} {
+using namespace Engine::Data;
+using namespace Engine::Core;
+
+bool TextureQuad::operator== (TextureQuad & other) {
+	return (x == other.x && y == other.y && w == other.w && h == other.h);
+}
+
+TextureQuad::TextureQuad (float x, float y, float w, float h, int depth):
+	x {x}, y{y}, w{w}, h{h}, depth{depth}
+	{
 
 }
 
-Engine::Texture::Texture (const std::string & name, const std::string & path, TexType type) : 
-	type {type},
-	quad {nullptr},
-	key {name} {
-	load_texture (path, data, width, height);
+TextureQuad::TextureQuad ():
+	x{0.0}, y{0.0}, w{0.0}, h{0.0}, depth{0}
+	{
+
 }
 
-Engine::Texture::~Texture () {
+Texture::Texture () : 
+	data {nullptr} {
+
+}
+
+Texture::Texture (unsigned char * data, size_t width, size_t height):
+	data	{data},
+	width	{width},
+	height	{height}
+	{
+
+}
+
+Texture::~Texture () {
+	printf ("destruction de donnée de texture %p\n", data);
 	stbi_image_free (data);
 }
 
-Engine::TextureAtlas::TextureAtlas () :
-	m_width {0},
-	m_height	{0},
-	m_cumul_width	{0},
-	m_cumul_height	{0},
-	m_cumul_depth 	{0},
-	m_max_height 	{0},
-	m_max_size	{4096 * 2},
-	m_max_depth	{1}
-{
+Texture & Texture::operator= (Texture && other) {
+	if (data) {
+		stbi_image_free (data);
+	}
 
+	data	= other.data;
+	width	= other.width;
+	height	= other.height;
+
+	other.data = nullptr;
+
+	return (*this);
 }
 
-void Engine::TextureAtlas::build (unsigned int n) {
-	glActiveTexture(GL_TEXTURE0 + n);
-	glGenTextures(1, &texture_handle);
-	glBindTexture(GL_TEXTURE_2D_ARRAY, texture_handle);
+
+TextureAtlas::TextureAtlas (const Core::AssetManager * assetManager):
+	mHandle {0},
+	mWidth {4096},
+	mHeight {4096},
+	pAssetManager {assetManager}
+	{
+
+	TextureQuad _canvas;
+	_canvas.x = 0;
+	_canvas.y = 0;
+	_canvas.w = mWidth;
+	_canvas.h = mHeight;
+	_canvas.depth = 0;
+
+	mPartitions.push_back ({_canvas, false});
+}
+
+TextureAtlas::~TextureAtlas () {
+	if (mHandle) {
+		glDeleteTextures (1, &mHandle);
+	}
+}
+
+unsigned int TextureAtlas::Get () const {
+	return (mHandle);
+}
+
+static bool comp_quad_pair (std::pair<TextureQuad, bool> a, std::pair<TextureQuad, bool> b) {
+	return (a.first.w * a.first.h < b.first.w * b.first.h);
+}
+
+// TODO-fix: add depth
+void TextureAtlas::Feed (Vector<TextureID> textures) {
+	for (TextureID _textureID : textures) {
+		if (mAtlas.find (_textureID) != mAtlas.end ()) continue;
+
+		const Texture & _texture = pAssetManager->GetTexture (_textureID);
+		size_t _width  = _texture.width;
+		size_t _height = _texture.height;
+
+		bool _generate_right = false;
+		bool _generate_top = false;
+
+		TextureQuad _right;
+		TextureQuad _top;
+
+		// the first partion we find will have the least amount of divided space
+		std::sort (mPartitions.begin (), mPartitions.end (), comp_quad_pair);
+
+		// we are trying to find a partition fitting the dimension of the texture in the partitioned space of the atlas
+		for (auto &[_quad, _assigned] : mPartitions) {
+			// partition already holds a texture
+			if (_assigned) continue;
+
+			// texture too big for parition
+			if (_quad.w < _width || _quad.h < _height) continue;
+
+			size_t _deltaWidth  = _quad.w - _width;
+			size_t _deltaHeight = _quad.h - _height;
+
+			// new partitions are created to fill in remaining space
+
+			if (_quad.x + _width < mWidth) {
+				_right.x = _quad.x + _width;
+				_right.y = _quad.y;
+				_right.w = _deltaWidth;
+				_right.h = _height;
+				_right.depth = _quad.depth;
+
+				_generate_right = true;
+			}
+
+			if (_quad.y + _height < mHeight) {	
+				_top.x = _quad.x;
+				_top.y = _quad.y + _height;
+				_top.w = _quad.w;
+				_top.h = _deltaHeight;
+				_top.depth = _quad.depth;
+
+				_generate_top = true;
+			}
+
+			// partition is resized to fit texture
+			_quad.w = _width;
+			_quad.h = _height;
+			_assigned = true;
+
+			mAtlas.emplace (_textureID, std::make_unique<TextureQuad> (_quad));
+			//mAtlas[_textureID] = std::make_unique<TextureQuad> (_quad);
+
+			break;
+		}
+
+		if (_generate_right) {
+			mPartitions.push_back ({_right, false});
+		}
+		if (_generate_top) {
+			mPartitions.push_back ({_top,   false});
+		}
+	}
+}
+
+void TextureAtlas::Generate () {
+	if (mHandle) {
+		glDeleteTextures (1, &mHandle);
+	}
+
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &mHandle);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, mHandle);
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, m_max_size, m_max_size, m_max_depth);
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, mWidth, mHeight, 1);
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	//int i = 0;
+	for (const auto & [_textureID, _quad] : mAtlas) {
+		const Texture & _texture = pAssetManager->GetTexture (_textureID);
 
-	// Missing Texture
+		//printf ("%f %f %f %f %d : %p\n", _quad->x, _quad->y, _quad->w, _quad->h, _quad->depth, _texture.data);
 
-	m_missing_texture = (TextureQuad) { this, 0, 0, 2, 2, 0 };
-
-	/*
-	unsigned char data[16] = {
-		207, 8, 174, 255,      0,   0,   0, 255,
-		0,   0,   0, 255,    207,   8, 174, 255
-	};
-	*/
-
-	unsigned char data[16] = {
-		255, 255, 255, 255,    255, 255, 255, 255,
-		255, 255, 255, 255,    255, 255, 255, 255
-	};
-
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
-		0,
-		0, 0, 0,
-		2, 2, 1,
-		GL_RGBA, GL_UNSIGNED_BYTE,
-		data
-	);
-
-	m_cumul_width = 2;
-	m_cumul_height = 2;
-	m_max_height = 2;
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+			0,
+			
+			_quad->x, _quad->y, 0,
+			_quad->w, _quad->h, 1,
+			
+			GL_RGBA,
+			GL_UNSIGNED_BYTE,
+			_texture.data
+		);
+		//++i;
+		//printf ("%d/%lld\n", i, mAtlas.size ());
+	}
 }
 
-Engine::TextureQuad * Engine::TextureAtlas::getQuad (const Texture * texture) {
-	if (!texture || texture->key.empty ()) {
-		return (&m_missing_texture);
-	}
+const Engine::Data::TextureQuad * Engine::Data::TextureAtlas::Quad (TextureID texture) const {
+	auto pos = mAtlas.find (texture);
 
-	auto pos = m_atlas.find (texture->key);
-	if (pos != m_atlas.end()) return (pos->second.get ());
-
-	if (m_max_height < texture->height) {
-		m_max_height = texture->height;
-	}
-
-	if (m_cumul_width + texture->width > m_max_size) {
-		m_cumul_height += texture->height;
-		m_cumul_width = 0;
-		m_max_height = 0;
-	}
-
-	if (m_cumul_height + texture->height > m_max_size) {
-		printf ("ERROR: Too many textures in atlas.\n");
+	if (pos == mAtlas.end ()) {
+		std::cout << "TextureID not found\n";
 		return (nullptr);
 	}
 
-	m_atlas[texture->key] = std::make_unique<TextureQuad> (this, (float)m_cumul_width, (float)m_cumul_height, (float)texture->width, (float)texture->height, 0);
+	return (pos->second.get ());
+}
 
-	glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
-		0,
-		m_cumul_width,  m_cumul_height,  0,
-		texture->width, texture->height, 1,
-		GL_RGBA, GL_UNSIGNED_BYTE,
-		texture->data
-	);
+size_t TextureAtlas::Width () const {
+	return (mWidth);
+}
 
-	m_cumul_width += texture->width;
+size_t TextureAtlas::Height () const {
+	return (mHeight);
+}
 
-	return (m_atlas [texture->key].get ());
+void TextureAtlas::Resize (size_t newWidth, size_t newHeight) {
+	mWidth  = newWidth;
+	mHeight = newHeight;
+
+	Reconstruct ();
+	Generate ();
+}
+
+void TextureAtlas::Reconstruct () {
+	Vector<TextureID> _textures;
+
+	for (auto & [_id, _] : mAtlas) {
+		_textures.push_back (_id);
+	}
+
+	mPartitions.clear ();
+	mAtlas.clear ();
+
+	TextureQuad _canvas;
+	_canvas.x = 0;
+	_canvas.y = 0;
+	_canvas.w = mWidth;
+	_canvas.h = mHeight;
+	_canvas.depth = 1;
+
+	mPartitions.push_back ({_canvas, false});
+
+	Feed (_textures);
 }

@@ -1,0 +1,50 @@
+SceneGraph
+	SceneNode		root
+
+SceneNode
+	Geometry		id
+	Transformation		data
+	string			name
+	SceneNode[]		children
+
+
+
+Steps:
+	Load data (AssetManager -> ResourceManager) then
+		Generate scene graph
+
+	Upload data from scene graph to graphics API (Renderer->upload)
+	Render data (Renderer->render)
+
+
+	
+Important stuff to consider:
+	Any form of modification to the scene graph must be treated aproprietly.
+		Hiding/Removing a node:
+			-> DrawCommand -> instances --
+			-> remove instance data from ssbo
+
+		Showing/Adding a node
+			-> DrawCommand -> instances ++
+			-> add instance data to ssbo
+
+		Problem in 2 of the above:
+			1) ordering
+			2) Moving around instance data
+		
+		Fix for the 2 of them:
+			1) idk
+			2)
+				- Swap k and n instance data then "shrink buffer" (works if only one geometry tho)
+				- Reupload instance data after the one that has been added/removed
+					pseudo-code:
+					all_insert_dirty = false
+					for (obj : objects):
+						if obj.insert_dirty:
+							all_insert_dirty = true
+						
+						if all_insert_dirty:
+							upload_instance (object)
+
+						
+							

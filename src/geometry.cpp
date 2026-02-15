@@ -1,13 +1,13 @@
-#include <engine/geometry.hpp>
+#include <engine/data/Geometry.hpp>
+#include <engine/utils/ShortcutTypes.hpp>
 
-Engine::Geometry::Geometry () {
+using namespace Engine::Data;
+
+Geometry::Geometry () {
 
 }
 
-Engine::Geometry::Geometry (std::vector<Vertex> vert, std::vector<uint32_t> ind) {
+Geometry::Geometry (Vector<Vertex> & vert, Vector<uint32_t> & ind) {
 	vert.swap (vertices);
-	ind.swap (indices);
-
-	//printf ("(Geometry) vert size = %lld\n", vertices.size ());
-	
+	ind .swap (indices);	
 }

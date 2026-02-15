@@ -1,103 +1,143 @@
-#include <engine/scene.hpp>
-#include <engine/engine.hpp>
+#include <engine/core/Scene.hpp>
 
-Engine::Scene::Scene (Engine * engine) :
-	p_engine {engine} {
-	
-}
+#include <engine/data/Instance.hpp>
+#include <engine/data/Geometry.hpp>
+#include <engine/data/Shader.hpp>
+#include <engine/data/Texture.hpp>
+#include <engine/data/Vertex.hpp>
 
-Engine::Scene::~Scene () {
-	for (auto batch : m_batch_array) {
-		delete batch;
+#include <filesystem>
+
+using namespace Engine::Core;
+using namespace Engine::Data;
+
+
+static Vector<String> getTexturePaths (aiMaterial * material, aiTextureType type) {
+	Vector<String> paths;
+	for(unsigned int i = 0; i < material->GetTextureCount(type); ++i) {
+		aiString str;
+		material->GetTexture(type, i, &str);
+		paths.push_back (std::string {str.C_Str ()});
 	}
+	
+	return (paths);
 }
 
-Engine::Mesh * Engine::Scene::createMesh (Geometry * geometry, Material * material) {
-	Batch * batch;
+
+
+Scene::Scene ()
+	{
+	defaultShader	= asset_manager.LoadShader	("default", "data/assets/shaders/default.vertex", "data/assets/shaders/default.fragment");
+	defaultTexture	= asset_manager.LoadTexture	("default", "data/assets/textures/default.png");
+	//defaultMaterial	= asset_manager.createMaterial	("default", defaultShader, {defaultTexture});
+}
+
+void Scene::Load (const std::string & url) {
+	std::string directory = url.substr(0, url.find_last_of('/'));
+
+	Assimp::Importer importer;
+	const aiScene *scene = importer.ReadFile(url, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+		std::string error {importer.GetErrorString ()};
+		throw std::runtime_error ("Assimp error " + error);
+		return;
+	}
 	
-	auto shader_pos = m_shader_location.find (material->shader);
-	if (shader_pos == m_shader_location.end ()) {
-		batch = new Batch;
-		batch->attachShader (material->shader);
-		
-		m_shader_location.emplace (material->shader, batch);
-		m_batch_array.push_back (batch);
+	ProcessNode(scene->mRootNode, scene, directory, graph.GetRoot ());
+}
+
+void Scene::ProcessMesh (aiMesh *mesh, __attribute__((unused)) const aiScene * scene, const aiMatrix4x4 & transform, const std::string & directory, SceneNode * node) {
+	String			mesh_name;
+	String			material_name;
+
+	Vector<Vertex>		vertices;
+	Vector<uint32_t>	indices;
+
+	GeometryID		geometry;
+	MaterialID		material;
+	Vector<TextureID>	diffuseIDs;
+
+	mesh_name = {mesh->mName.C_Str ()};
+
+	if (auto opt = asset_manager.GetGeometryID (mesh_name)) {
+		geometry = opt.value ();
 	}
 	else {
-		batch = shader_pos->second;
-	}
-	
-	auto ptr = std::make_unique<Mesh> (
-		this,
-		geometry,
-		glm::vec3 (0.0),
-		glm::vec3 (0.0),
-		glm::vec3 (1.0),
-		material
-	);
-	
-	auto mesh_pos = m_meshes.emplace (ptr.get (), std::move (ptr));
-	
-	if (!mesh_pos.second) {
-		printf ("ERROR: couldnt emplace the mesh");
-		// TODO: print log + handle error
-		exit (EXIT_FAILURE);
-	}
-	
+		// Vertices
+		for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
+			float tex_coord_x = 0.0f;
+			float tex_coord_y = 0.0f;
 
-	Mesh * mesh = mesh_pos.first->first;
-	batch->addMesh (mesh);
-	m_mesh_location.emplace (mesh, batch);
-	return (mesh);
-}
+			if (mesh->HasTextureCoords (0)) { // TODO-fix: maybe try to have all tex coords, idk how
+				tex_coord_x = mesh->mTextureCoords[0][i].x;
+				tex_coord_y = mesh->mTextureCoords[0][i].y;
+			}
 
-void Engine::Scene::removeMesh (Mesh * mesh) {
-	Batch * location = nullptr;
-
-	auto position = m_mesh_location.find (mesh);
-
-	if (position != m_mesh_location.end ()) {
-		location = position->second;
-		location->removeMesh (mesh);
-	}
-
-	m_meshes.erase (m_meshes.find (mesh));
-}
-
-std::vector<Engine::Mesh *> Engine::Scene::getMeshes () {
-	std::vector<Mesh *> result;
-
-	for (const auto & [mesh_ptr, mesh_uptr] : m_meshes) {
-		result.push_back (mesh_ptr);
-	}
-
-	return (result);
-}
-
-void Engine::Scene::printStats () {
-	printf ("--------------------------------------------------------------------------------------------------\n");
-	printf ("[Batch Info]\n");
-	printf ("There is %llu batch(es)\n", m_batch_array.size ());
-
-	size_t index = 0;
-	for (const auto & batch : m_batch_array) {
-		size_t gis  = batch->m_geometry_indices.size ();
-		size_t ges  = batch->m_geometry_entries.size () * sizeof (Batch::GeometryEntry);
-		size_t cmds = batch->m_commands.size () * sizeof (DrawCommand);
-
-		size_t mis  = batch->m_mesh_indices.size ();
-		size_t mes  = batch->m_mesh_entries.size () * sizeof (Batch::MeshEntry);
-		size_t inss = batch->m_instances.size () * sizeof (InstanceData); 
-		printf ("\t[%llu]\t{GIS: %llu elements; GES: %llu bytes; CMDS: %llu bytes}\n\t\t{MIS: %llu elements; MES: %llu bytes; INSS: %llu bytes}\n", 
-				index,
-				gis, ges, cmds,
-				mis, mes, inss
+			vertices.emplace_back (
+				mesh->mVertices[i].x,		mesh->mVertices[i].y,		mesh->mVertices[i].z,
+				mesh->mNormals[i].x,		mesh->mNormals[i].y,		mesh->mNormals[i].z,
+				mesh->mTangents[i].x,		mesh->mTangents[i].y,		mesh->mTangents[i].z,
+				tex_coord_x,			tex_coord_y
 			);
+		}
 
-		printf ("\t\t{MCnt: %u; VBS: %u; IBS: %u}\n", batch->m_mesh_count, batch->m_vertex_count, batch->m_index_count);
+		// Indices
+		for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {
+			aiFace face = mesh->mFaces[i];
 
-		++index;
+			for(unsigned int j = 0; j < face.mNumIndices; ++j) {	
+				indices.push_back (face.mIndices[j]);
+			}
+		}
+
+		geometry = asset_manager.CreateGeometry (mesh_name, vertices, indices);
 	}
 
-	printf ("--------------------------------------------------------------------------------------------------\n");
+	// TODO-fix : Implement flat color materials
+	aiMaterial * ai_mat = scene->mMaterials[mesh->mMaterialIndex];
+	material_name = ai_mat->GetName ().C_Str ();
+	
+	if (auto opt = asset_manager.GetMaterialID (material_name)) {
+		material = opt.value ();
+
+		Material _material = asset_manager.GetMaterial (material);
+		diffuseIDs = _material.diffuse_textures;
+	}
+	else {
+		for (auto path: getTexturePaths (ai_mat, aiTextureType_DIFFUSE)) {
+			std::string tex_name = std::filesystem::path {path}.stem ().string ();
+			ObjectID diffuse = asset_manager.LoadTexture (tex_name, directory + "/" + path);
+
+			if (!diffuse.isValid ()){
+				diffuse = defaultTexture;
+			}
+
+			diffuseIDs.push_back (diffuse);
+		}
+
+		//if (diffuseIDs.size () < 1) {
+		//	diffuseIDs.push_back (defaultTexture);
+		//}
+
+		material = asset_manager.CreateMaterial (material_name, defaultShader, diffuseIDs); // TODO: modify shader I guess ?
+	}
+
+	// TODO-fix: generate mesh pos from aiMatrix4x4 or similar
+	node->addMesh (geometry, material);
+}
+
+void Scene::ProcessNode(aiNode * node, const aiScene * scene, const std::string & directory, SceneNode * graph_node) {
+	//if (graph.GetTotalMeshCount () > 1) return;
+
+	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+		aiMesh * mesh = scene->mMeshes[node->mMeshes[i]];
+		ProcessMesh (mesh, scene, node->mTransformation, directory, graph_node);
+		//break;
+	}
+
+	for (unsigned int i = 0; i < node->mNumChildren; i++) {
+		SceneNode * nnode = new SceneNode {node->mName.C_Str (), graph_node, graph_node->graph};
+		ProcessNode (node->mChildren[i], scene, directory, nnode);
+	}
 }

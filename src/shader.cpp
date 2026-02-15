@@ -6,9 +6,11 @@
 
 #include <glad/glad.h>
 
-#include <engine/shader.hpp>
-#include <engine/utils.hpp>
+#include <engine/data/Shader.hpp>
 
+#include <engine/utils/Utils.hpp>
+
+using namespace Engine::Data;
 
 static bool CreateVertex (std::string path, unsigned int *object) {
 	int status;
@@ -69,17 +71,17 @@ static bool CreateFragment (std::string path, unsigned int *object) {
 	return (true);
 }
 
-Engine::Shader::Shader () {
+Shader::Shader () {
 	
 }
 
-Engine::Shader::Shader (const std::string & vertex_url, const std::string & frag_url) {
+Shader::Shader (const std::string & vertex_url, const std::string & frag_url) {
 	createShader (vertex_url, ShaderType::VERTEX);
 	createShader (frag_url, ShaderType::FRAGMENT);
 	compile ();
 }
 
-void Engine::Shader::createShader (const std::string & url, const ShaderType & type) {
+void Shader::createShader (const std::string & url, const ShaderType & type) {
 	unsigned int shader_object;
 
 	bool result = true;
@@ -105,7 +107,7 @@ void Engine::Shader::createShader (const std::string & url, const ShaderType & t
 	m_urls[type] = url;
 }
 
-void Engine::Shader::compile () {
+void Shader::compile () {
 	unsigned int shader;
 	shader = glCreateProgram ();
 
@@ -128,30 +130,30 @@ void Engine::Shader::compile () {
 	m_program = shader;
 }
 
-void Engine::Shader::use () {
+void Shader::use () {
 	glUseProgram (m_program);
 }
 
-void Engine::Shader::cancel () {
+void Shader::cancel () {
 	glUseProgram (0);
 }
 
 // TODO-add : create a cache for uniform locations
-void Engine::Shader::uploadMatrix4 (std::string key, glm::mat4& matrix) {
+void Shader::uploadMatrix4 (std::string key, glm::mat4& matrix) {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
     glUniformMatrix4fv (location, 1, GL_FALSE, &matrix[0][0]);
 }
 
-void Engine::Shader::upload1i (std::string key, int i) {
+void Shader::upload1i (std::string key, int i) {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
     glUniform1i (location, i);
 }
 
-void Engine::Shader::upload3fv (std::string key, glm::vec3 vec) {
+void Shader::upload3fv (std::string key, glm::vec3 vec) {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());

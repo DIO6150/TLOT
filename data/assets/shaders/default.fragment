@@ -2,14 +2,22 @@
 
 in vec3 vNormals;
 in vec2 vTexCoords;
+in vec3 vColor;
 in flat int vInstanceID;
+in flat int vBColor;
 
 out vec4 FragColor;
 
 uniform sampler2DArray uAtlas;
 
 void main() {
-	FragColor = texture(uAtlas, vec3(vTexCoords, 0.0));
+
+	vec4 color = texture(uAtlas, vec3(vTexCoords, 0.0));
+	if (vBColor != 0) {
+		color = vec4 (vColor, 1.0);
+	}
+
+	FragColor = color;
 	//if (vInstanceID != 0) FragColor = vec4(1.0f, 0.0, 0.0, 1.0);
 
 	//FragColor = vec4 ( float(vInstanceID) / 10.0, float(vInstanceID) / 10.0, float(vInstanceID) / 10.0, 1.0);

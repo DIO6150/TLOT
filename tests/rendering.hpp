@@ -22,6 +22,7 @@ namespace TestRendering {
 		//Engine::Scene * scene = engine.loadSceneAssimp ("data/assets/models/columbina_rigged_free/scene.gltf");
 		//Engine::Scene * scene = engine.loadSceneAssimp ("data/assets/models/genshin_impact_-_chiori/scene.gltf");
 		Engine::Scene * scene = engine.loadSceneAssimp ("data/assets/models/eula_genshin_impact/scene.gltf");
+
 		scene->printStats ();
 
 		auto meshes = scene->getMeshes ();
