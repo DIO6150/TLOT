@@ -1,0 +1,13 @@
+#version 460 core
+
+out vec4 FragColor;
+  
+in vec2 vTexCoords;
+
+uniform sampler2D uFrame;
+
+const float offset = 1.0 / 300.0;
+
+void main() {
+	FragColor = vec4 (1.0 - texture (uFrame, vTexCoords).xyz, 1.0);
+}

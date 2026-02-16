@@ -56,12 +56,21 @@ int main (int argc, char ** argv) {
 	stbi_set_flip_vertically_on_load(0);
 
 	Scene scene;
-	scene.Load (argv[1]);
+
+	for (int i = 1; i < argc; ++i) {
+		std::cout << argv[i] << "\n";
+		scene.Load (argv[i]);
+	}
+
 	InstanceRenderer renderer {&scene};
 	Camera cam;
-	renderer.Init ();
+	renderer.Init (800, 800);
 
-	
+	renderer.AddPostProcessingEffect ("gray", scene.asset_manager.LoadShader ("gray", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/grayscale.postprocess.fragment"));
+	renderer.AddPostProcessingEffect ("edge", scene.asset_manager.LoadShader ("edge", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/edge.postprocess.fragment"));
+
+	//renderer.AddPostProcessingEffect ("bnw", scene.asset_manager.LoadShader ("bnw", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/black_and_white.postprocess.fragment"));
+	//renderer.AddPostProcessingEffect ("inverse", scene.asset_manager.LoadShader ("inverse", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/inverse.postprocess.fragment"));
 	
 	double SENSITIVITY = 0.25f;
 	double mouse_x, mouse_y;
@@ -120,7 +129,7 @@ int main (int argc, char ** argv) {
 			continue;
 		}
 		
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//printf ("Currently Rendering\n");
 		renderer.Render (&cam);
 		glfwSwapBuffers(window);
 		glfwPollEvents ();

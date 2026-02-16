@@ -1,0 +1,82 @@
+{
+	"name": "Scène 1",
+
+	"data": {
+		"textures": {
+			"foo": "/assets/textures/foo.png",
+			"bar": "/assets/textures/bar.png",
+			"toto": "/assets/textures/toto.png"
+		},
+		"shaders": {
+			"default": {
+				"vertex":   "/assets/shaders/default.vertex",
+				"fragment": "/assets/shaders/default.fragment"
+			}
+		},
+		"materials": {
+			"mat1": {
+				"diffuse_texture": "foo",
+				"color": [1.0, 0.0, 0.0, 1.0]
+			},
+
+			"mat2": {
+				"diffuse_texture": "bar",
+				"color": [1.0, 1.0, 1.0, 1.0]
+			}
+		},
+		"meshes": {
+			"card": {
+				"vertices": [],
+				"indices": [],
+				"material": "mat1",
+				"shader": "default"
+			},
+	
+			"desk": {
+				"vertices": [],
+				"indices": [],
+				"material": "mat2",
+				"shader": "default"
+			}
+		}
+	},
+
+
+	"world": {
+		"node1": {
+			"transform": {
+				"position": [0.0, 0.0, 0.0],
+				"rotation": [0.0, 0.0, 0.0],
+				"scale":    [1.0, 1.0, 1.0]
+			},
+
+			"children": [
+				"node2"
+			],
+
+			"meshes": [
+				"desk"
+			],
+
+			"tags": [
+				"feur"
+			]
+		},
+
+		"node2": {
+			"transform": {
+				"position": [0.0, 0.0, 5.0],
+				"rotation": [0.0, 0.0, 10.0],
+				"scale":    [1.0, 1.0, 1.0]
+			},
+
+			"children": [
+				
+			],
+
+			"meshes": [
+				"desk"
+			]
+		}
+	}
+}

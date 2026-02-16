@@ -130,30 +130,30 @@ void Shader::compile () {
 	m_program = shader;
 }
 
-void Shader::use () {
+void Shader::use () const {
 	glUseProgram (m_program);
 }
 
-void Shader::cancel () {
+void Shader::cancel () const {
 	glUseProgram (0);
 }
 
 // TODO-add : create a cache for uniform locations
-void Shader::uploadMatrix4 (std::string key, glm::mat4& matrix) {
+void Shader::uploadMatrix4 (std::string key, glm::mat4& matrix) const {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
     glUniformMatrix4fv (location, 1, GL_FALSE, &matrix[0][0]);
 }
 
-void Shader::upload1i (std::string key, int i) {
+void Shader::upload1i (std::string key, int i) const {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
     glUniform1i (location, i);
 }
 
-void Shader::upload3fv (std::string key, glm::vec3 vec) {
+void Shader::upload3fv (std::string key, glm::vec3 vec) const {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());

@@ -26,6 +26,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <iostream>
+
 namespace Engine::Core {
 	class SceneGraph;
 	
@@ -33,7 +35,7 @@ namespace Engine::Core {
 	public:
 		~SceneNode ();
 
-		void addMesh (Core::GeometryID geometry, Core::MaterialID material);
+		void addMesh (Core::GeometryID geometry, Core::MaterialID material, glm::mat4 transform);
 		const std::vector<std::unique_ptr<Data::Mesh>> & getMeshes ();
 		const std::vector<SceneNode *> & getChildren ();
 	
@@ -74,7 +76,7 @@ namespace Engine::Core {
 			root.Traverse<F> (callback);
 		}
 
-		std::unordered_map<Core::GeometryID, std::vector<Data::Mesh *>> GetMeshes () const;
+		const std::unordered_map<Core::GeometryID, std::vector<Data::Mesh *>> & GetMeshes () const;
 
 	private:
 		SceneNode root;

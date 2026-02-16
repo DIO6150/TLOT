@@ -12,6 +12,18 @@ using namespace Engine::Core;
 using namespace Engine::Data;
 
 
+// TODO: si c'est pour refaire le scene graph fournit par assimp, mieux vaut juste garder le scene graph d'assimp et pas réinventer la roue...
+// plan pour faire les carabistouilles:
+// on garde l'instance de l'importer dans la classe Scene
+// on a un resourceManager de aiScene qui correspondent à un SceneID ou qqch de similaire correspondant
+// quand on veut render un truc on met un vecteur de sceneID dans le renderer
+// il s'occupe alors de process les mesh de la même façon qu'ici ? <- probleme tho
+// parce que modifier la scène revient à faire des choses zarbs
+// ou même la copier pour avoir des scènes identiques c'est chelou du coup
+// ya un avantage à garder le système actuel tho
+// c'est qu'on peut se débarasser d'assimp quand on veut
+// + c'est plus facile pour cacher les resources
+
 static Vector<String> getTexturePaths (aiMaterial * material, aiTextureType type) {
 	Vector<String> paths;
 	for(unsigned int i = 0; i < material->GetTextureCount(type); ++i) {
@@ -44,7 +56,9 @@ void Scene::Load (const std::string & url) {
 		return;
 	}
 	
-	ProcessNode(scene->mRootNode, scene, directory, graph.GetRoot ());
+	
+	SceneNode * _node = new SceneNode {scene->mName.C_Str (), graph.GetRoot (), &graph};
+	ProcessNode(scene->mRootNode, scene, directory, _node);
 }
 
 void Scene::ProcessMesh (aiMesh *mesh, __attribute__((unused)) const aiScene * scene, const aiMatrix4x4 & transform, const std::string & directory, SceneNode * node) {
@@ -91,7 +105,7 @@ void Scene::ProcessMesh (aiMesh *mesh, __attribute__((unused)) const aiScene * s
 			}
 		}
 
-		geometry = asset_manager.CreateGeometry (mesh_name, vertices, indices);
+		geometry = asset_manager.CreateGeometry (directory + "/" + mesh_name, vertices, indices);
 	}
 
 	// TODO-fix : Implement flat color materials
@@ -123,8 +137,10 @@ void Scene::ProcessMesh (aiMesh *mesh, __attribute__((unused)) const aiScene * s
 		material = asset_manager.CreateMaterial (material_name, defaultShader, diffuseIDs); // TODO: modify shader I guess ?
 	}
 
+
+	glm::mat4 _transform {1.0f};
 	// TODO-fix: generate mesh pos from aiMatrix4x4 or similar
-	node->addMesh (geometry, material);
+	node->addMesh (geometry, material, _transform);
 }
 
 void Scene::ProcessNode(aiNode * node, const aiScene * scene, const std::string & directory, SceneNode * graph_node) {

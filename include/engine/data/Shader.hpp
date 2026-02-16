@@ -18,13 +18,13 @@ namespace Engine::Data {
 		void createShader (const std::string & url, const ShaderType & type);
 		void compile ();
 
-		void use ();
-		void cancel ();
+		void use () const;
+		void cancel () const;
 
 		// TODO-add : cache system
-		void uploadMatrix4	(std::string key, glm::mat4& matrix);
-		void upload1i		(std::string key, int i);
-		void upload3fv		(std::string key, glm::vec3 vec);
+		void uploadMatrix4	(std::string key, glm::mat4& matrix) const;
+		void upload1i		(std::string key, int i) const;
+		void upload3fv		(std::string key, glm::vec3 vec) const;
 
 	private:	
 		uint32_t					m_program;

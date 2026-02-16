@@ -12,8 +12,8 @@ using namespace Engine::Core;
 using namespace Engine::Data;
 
 
-void SceneNode::addMesh (GeometryID geometry, MaterialID material) {
-	meshes.emplace_back (std::make_unique<Mesh> (geometry, material));
+void SceneNode::addMesh (GeometryID geometry, MaterialID material, glm::mat4 transform) {
+	meshes.emplace_back (std::make_unique<Mesh> (geometry, material, transform));
 	auto pos = graph->geometry_to_meshes.find (geometry);
 	if (pos != graph->geometry_to_meshes.end ()) {
 		pos->second.push_back (meshes.back ().get ());
@@ -75,6 +75,6 @@ uint32_t SceneGraph::GetGeometryCount () const {
 	return (geometry_to_meshes.size ());
 }
 
-ObjectMap<Vector<Mesh *>> SceneGraph::GetMeshes () const {
+const ObjectMap<Vector<Mesh *>> & SceneGraph::GetMeshes () const {
 	return (geometry_to_meshes);
 }

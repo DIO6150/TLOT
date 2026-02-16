@@ -19,6 +19,7 @@
 namespace Engine::Data {
 	struct Mesh {
 		Mesh (Core::GeometryID geometry, Core::MaterialID material);
+		Mesh (Core::GeometryID geometry, Core::MaterialID material, glm::mat4 transform);
 
 		Core::GeometryID geometry;
 		Core::MaterialID material;

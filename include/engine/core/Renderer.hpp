@@ -13,7 +13,7 @@ namespace Engine::Core {
 
 		virtual ~IRenderer () = 0;
 
-		virtual void Init () = 0;
+		virtual void Init (int width, int height) = 0;
 		virtual void Render (Module::Camera * camera) = 0;
 
 	protected:

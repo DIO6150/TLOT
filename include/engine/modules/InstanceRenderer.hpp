@@ -10,6 +10,37 @@
 
 #include <engine/data/Texture.hpp>
 
+
+namespace Engine::Internal {
+	class PostProcessingEffect {
+	public:
+		PostProcessingEffect (Core::ShaderID shader);
+
+		Core::ShaderID postProcess;
+		bool active;
+	};
+
+	class FrameBuffer {
+	public:
+		FrameBuffer ();
+		FrameBuffer (int width, int height);
+		~FrameBuffer ();
+
+		FrameBuffer (FrameBuffer && other) = default;
+		FrameBuffer (FrameBuffer & other) = default;
+		FrameBuffer (const FrameBuffer & other) = default;
+
+		void Init (int width, int height);
+
+		unsigned int Get () const;
+		unsigned int GetColorAttachement () const;
+	private:
+		unsigned int mFrameBuffer;
+		unsigned int mTextureColorBuffer;
+		unsigned int mRenderBuffer;
+	};
+}
+
 namespace Engine::Module {
 	class RenderingGroup {
 	public:
@@ -60,12 +91,24 @@ namespace Engine::Module {
 		InstanceRenderer (Core::Scene * scene);
 		~InstanceRenderer ();
 
-		void Init () override;
+		void AddPostProcessingEffect (std::string name, Core::ShaderID shader);
+		void DisablePostProcessingEffect (std::string name);
+		void RemovePostProcessingEffect (std::string name);
+
+		void Init (int width, int height) override;
 		void Render (Camera * camera) override;
 
 	private:
 		std::vector<RenderingGroup> mGroups;
-
 		Data::TextureAtlas mAtlas;
+
+		std::vector<std::pair<std::string, Internal::PostProcessingEffect>> mEffects;
+		Core::ShaderID mFinalBlit;
+		
+		Internal::FrameBuffer mSceneFrameBuffer;
+		std::vector<Internal::FrameBuffer> mPingPong;
+
+		unsigned int mFBVAO;
+		unsigned int mFBVBO;
 	};
 }
