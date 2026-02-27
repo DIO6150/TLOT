@@ -6,8 +6,8 @@
 
 namespace Engine::Data {
 	struct Mesh;
+	struct Model;
 	struct Vertex;
-	struct Instance;
 	struct Geometry;
 	struct Material;
 
@@ -15,30 +15,25 @@ namespace Engine::Data {
 	class Texture;
 
 	class TextureAtlas;
+
+	class ShaderInputs;
 }
 
 namespace Engine::Core {
-	class ObjectID;
-
-	using GeometryID	= ObjectID;
-	using MaterialID	= ObjectID;
-	using ShaderID		= ObjectID;
-	using TextureID		= ObjectID;
-	
-	using InstanceID	= ObjectID;
-	using MeshID		= ObjectID;
-
+	class HandleID;
 	class DrawCommand;
-
-	class Scene;
-
-	struct SceneNode;
-	class  SceneGraph;
-
 	class AssetManager;
 }
 
 namespace Engine::Module {
 	class Camera;
 	class InstanceRenderer;
+}
+
+namespace Engine::Internal {
+	class FrameBuffer;
+	class RenderingGroup;
+
+	template<class T>
+	struct RenderInput;
 }

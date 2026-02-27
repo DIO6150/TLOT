@@ -82,7 +82,7 @@ Shader::Shader (const std::string & vertex_url, const std::string & frag_url) {
 }
 
 void Shader::createShader (const std::string & url, const ShaderType & type) {
-	unsigned int shader_object;
+	unsigned int shader_object = 0;
 
 	bool result = true;
 
@@ -100,6 +100,7 @@ void Shader::createShader (const std::string & url, const ShaderType & type) {
 	}
 
 	if (!result) {
+		std::cout << "ERROR: couldnt create shader as type is unknown\n";
 		return;
 	}
 
@@ -139,7 +140,7 @@ void Shader::cancel () const {
 }
 
 // TODO-add : create a cache for uniform locations
-void Shader::uploadMatrix4 (std::string key, glm::mat4& matrix) const {
+void Shader::uploadMatrix4 (std::string key, const glm::mat4& matrix) const {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
@@ -158,4 +159,11 @@ void Shader::upload3fv (std::string key, glm::vec3 vec) const {
 
     location = glGetUniformLocation (m_program, key.c_str ());
     glUniform3fv (location, 1, &vec[0]);
+}
+
+void Shader::upload1f (std::string key, float f) const {
+    int location;
+
+    location = glGetUniformLocation (m_program, key.c_str ());
+    glUniform3fv (location, 1, &f);
 }

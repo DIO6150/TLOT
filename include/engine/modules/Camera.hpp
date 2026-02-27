@@ -64,7 +64,7 @@ namespace Engine::Module {
 		void rotate (glm::vec3 offset) {
 			rotation += offset;
 
-			if(rotation.y > 89.0) rotation.y =  89.0;
+			if(rotation.y > 89.0)  rotation.y =  89.0;
     			if(rotation.y < -89.0) rotation.y = -89.0;
 		}
 
@@ -75,6 +75,12 @@ namespace Engine::Module {
 			_direction.z = sin(glm::radians(rotation.x)) * cos(glm::radians(rotation.y));
 			direction = glm::normalize(_direction);
 			return (glm::lookAt (position, position + direction, glm::vec3 {0.0, 1.0, 0.0}));
+		}
+
+		friend std::ostream& operator<< (std::ostream &out, const Camera & data) {
+			out << "([" << data.position.x << ", " << data.position.y << ", " << data.position.x << "], [" <<
+			data.rotation.x << ", " << data.rotation.y << ", " << data.rotation.z << "])";
+			return out;
 		}
 
 	};

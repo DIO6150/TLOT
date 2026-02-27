@@ -10,7 +10,7 @@
 
 #include <glm/glm.hpp>
 
-#include <engine/core/DrawCommand.hpp>
+#include <engine/opengl/DrawCommand.hpp>
 
 #include <engine/data/Geometry.hpp>
 #include <engine/data/Mesh.hpp>

@@ -55,7 +55,7 @@ namespace Engine::Data {
 
 	class TextureAtlas {
 	public:
-		TextureAtlas (const Core::AssetManager * assetManager);
+		TextureAtlas ();
 		~TextureAtlas ();
 
 		TextureAtlas (TextureAtlas &  other) = default;
@@ -64,15 +64,17 @@ namespace Engine::Data {
 
 		unsigned int Get () const;
 
-		void Feed (std::vector<Core::TextureID> textures);
+		bool Feed (const std::vector<Core::HandleID> & textures);
 		
 		void Generate ();
 		
-		const TextureQuad * Quad (Core::TextureID texture) const;
+		const TextureQuad * Quad (Core::HandleID texture) const;
 		size_t Width  () const;
 		size_t Height () const;
 
 		void Resize (size_t newWidth, size_t newHeight);
+
+		bool ShouldGenerate () {return mToUpdate;}
 		
 	private:
 		void Reconstruct ();
@@ -81,9 +83,9 @@ namespace Engine::Data {
 		size_t mWidth;
 		size_t mHeight;
 
+		bool mToUpdate;
+
 		std::vector<std::pair<TextureQuad, bool>> mPartitions; // Quad, Assigned
-		std::unordered_map<Core::TextureID, std::unique_ptr<TextureQuad>> mAtlas;
-		
-		const Core::AssetManager * pAssetManager;
+		std::unordered_map<Core::HandleID, std::unique_ptr<TextureQuad>> mAtlas;
 	};
 }

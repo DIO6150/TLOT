@@ -6,7 +6,7 @@
 #include <vector>
 
 #include <engine/core/AssetManager.hpp>
-#include <engine/core/DrawCommand.hpp>
+#include <engine/opengl/DrawCommand.hpp>
 #include <engine/core/ResourceManager.hpp>
 
 #include <engine/utils/Types.hpp>

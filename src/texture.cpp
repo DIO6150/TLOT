@@ -54,11 +54,11 @@ Texture & Texture::operator= (Texture && other) {
 }
 
 
-TextureAtlas::TextureAtlas (const Core::AssetManager * assetManager):
+TextureAtlas::TextureAtlas ():
 	mHandle {0},
 	mWidth {4096},
 	mHeight {4096},
-	pAssetManager {assetManager}
+	mToUpdate {true}
 	{
 
 	TextureQuad _canvas;
@@ -86,13 +86,20 @@ static bool comp_quad_pair (std::pair<TextureQuad, bool> a, std::pair<TextureQua
 }
 
 // TODO-fix: add depth
-void TextureAtlas::Feed (Vector<TextureID> textures) {
-	for (TextureID _textureID : textures) {
-		if (mAtlas.find (_textureID) != mAtlas.end ()) continue;
-
-		const Texture & _texture = pAssetManager->GetTexture (_textureID);
-		size_t _width  = _texture.width;
-		size_t _height = _texture.height;
+// TODO-critical: if it can't find a partition large enough, it may break things, fix this asap
+bool TextureAtlas::Feed (const Vector<HandleID> & textures) {
+	bool _result = false;
+	
+	for (HandleID _textureID : textures) {
+		if (mAtlas.find (_textureID) != mAtlas.end ()) {
+			continue;
+		}
+		
+		AssetManager * am = AssetManager::GetInstance ();
+		
+		const Texture * _texture = am->GetTexture (_textureID);
+		size_t _width  = _texture->width;
+		size_t _height = _texture->height;
 
 		bool _generate_right = false;
 		bool _generate_top = false;
@@ -142,8 +149,10 @@ void TextureAtlas::Feed (Vector<TextureID> textures) {
 			_assigned = true;
 
 			mAtlas.emplace (_textureID, std::make_unique<TextureQuad> (_quad));
+			mToUpdate = true;
+			_result = true;
 			//mAtlas[_textureID] = std::make_unique<TextureQuad> (_quad);
-
+			std::cout << "Added TextureID=" << _textureID << "\n";
 			break;
 		}
 
@@ -154,6 +163,8 @@ void TextureAtlas::Feed (Vector<TextureID> textures) {
 			mPartitions.push_back ({_top,   false});
 		}
 	}
+
+	return (_result);
 }
 
 void TextureAtlas::Generate () {
@@ -174,8 +185,10 @@ void TextureAtlas::Generate () {
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	//int i = 0;
+	AssetManager * am = AssetManager::GetInstance ();
+
 	for (const auto & [_textureID, _quad] : mAtlas) {
-		const Texture & _texture = pAssetManager->GetTexture (_textureID);
+		const Texture * _texture = am->GetTexture (_textureID);
 
 		//printf ("%f %f %f %f %d : %p\n", _quad->x, _quad->y, _quad->w, _quad->h, _quad->depth, _texture.data);
 
@@ -187,18 +200,20 @@ void TextureAtlas::Generate () {
 			
 			GL_RGBA,
 			GL_UNSIGNED_BYTE,
-			_texture.data
+			_texture->data
 		);
 		//++i;
 		//printf ("%d/%lld\n", i, mAtlas.size ());
 	}
+
+	mToUpdate = false;
 }
 
-const Engine::Data::TextureQuad * Engine::Data::TextureAtlas::Quad (TextureID texture) const {
+const Engine::Data::TextureQuad * Engine::Data::TextureAtlas::Quad (HandleID texture) const {
 	auto pos = mAtlas.find (texture);
 
 	if (pos == mAtlas.end ()) {
-		std::cout << "TextureID not found\n";
+		std::cout << "HandleID not found: " << texture << "\n";
 		return (nullptr);
 	}
 
@@ -222,7 +237,7 @@ void TextureAtlas::Resize (size_t newWidth, size_t newHeight) {
 }
 
 void TextureAtlas::Reconstruct () {
-	Vector<TextureID> _textures;
+	Vector<HandleID> _textures;
 
 	for (auto & [_id, _] : mAtlas) {
 		_textures.push_back (_id);

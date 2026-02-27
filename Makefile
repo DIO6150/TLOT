@@ -31,7 +31,7 @@ endif
 # Compiler
 CXX      := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra $(ENGINE_INC) -I$(VENDOR_INC) $(GAME_INC)
-CXXFLAGS += -g -DDEBUG -O0
+CXXFLAGS += -O3
 
 # Auto-detect .cpp files
 SRC := $(wildcard $(ENGINE_SRC)/*.cpp) \

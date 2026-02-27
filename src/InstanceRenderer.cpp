@@ -1,29 +1,220 @@
 #include <engine/data/Vertex.hpp>
-#include <engine/data/Instance.hpp>
-#include <engine/data/Geometry.hpp>
 #include <engine/data/Mesh.hpp>
-#include <engine/utils/Utils.hpp>
 
-#include <engine/core/Scene.hpp>
-#include <engine/core/SceneGraph.hpp>
+#include <engine/opengl/DrawCommand.hpp>
+
+#include <engine/utils/Utils.hpp>
 
 #include <engine/modules/InstanceRenderer.hpp>
 
 #include <glad/glad.h>
+
+#include <iostream>
+#include <queue>
 
 using namespace Engine::Core;
 using namespace Engine::Data;
 using namespace Engine::Module;
 using namespace Engine::Internal;
 
-RenderingGroup::RenderingGroup (ShaderID shader, const SceneGraph * graph, const Core::AssetManager * manager, const TextureAtlas * atlas) :
-	max_vertex_count{2 * 2272727U},
-	max_index_count {2 * 150000U},
-	shader		{shader},
-	dirty		{true},
-	pScene		{graph},
-	pManager	{manager},
-	pAtlas		{atlas}
+InstanceRenderer::InstanceRenderer (int32_t width, int32_t height):
+	mSceneFrameBuffer   {width, height},
+	mMaxColorAttachment {1}
+	{
+
+	// a bit silly to do that
+	AssetManager * am = AssetManager::GetInstance ();
+	mFinalBlit = am->LoadShader ("blit_quad", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/blit_quad.fragment"); // TODO: dont
+	mPingPong.reserve (2);
+
+
+	mPingPong.emplace_back (width, height); // post process A
+	mPingPong.emplace_back (width, height); // post process B
+
+
+	float _quad[] = {
+		-1.0,  1.0,   0.0, 1.0,
+		-1.0, -1.0,   0.0, 0.0,
+		 1.0, -1.0,   1.0, 0.0,
+
+		-1.0,  1.0,   0.0, 1.0,
+		 1.0, -1.0,   1.0, 0.0,
+		 1.0,  1.0,   1.0, 1.0
+	};
+	glGenVertexArrays (1, &mFBVAO);
+	glGenBuffers (1, &mFBVBO);
+
+	glBindVertexArray (mFBVAO);
+	glBindBuffer (GL_ARRAY_BUFFER, mFBVBO);
+	glBufferData (GL_ARRAY_BUFFER, sizeof (_quad), _quad, GL_STATIC_DRAW);
+	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) 0);
+	glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) (2 * sizeof (float)));
+	glEnableVertexAttribArray (0);
+	glEnableVertexAttribArray (1);
+}
+
+InstanceRenderer::~InstanceRenderer () {
+	glDeleteVertexArrays (1, &mFBVAO);
+	glDeleteBuffers (1, &mFBVBO);
+};
+
+#include <ctime>
+
+void InstanceRenderer::Render (Camera * camera) {
+	static int c = 0;
+	clock_t dt = std::clock ();
+	for (auto & command : mCommands) {
+		if (mGroups.find (command.shaderID) == mGroups.end ()) {
+			mGroups.emplace (command.shaderID, &mAtlas);
+		}
+		mGroups.at (command.shaderID).Push (command);
+	}
+	dt = std::clock () - dt;
+	if (c%100 == 0) std::cout << "Feeding " << mCommands.size () << " Mesh(es) took: " << dt * 1000 / CLOCKS_PER_SEC << "ms.\n";
+	//if (c%10 == 0) std::cout << "Camera=" << *camera << "\n";
+
+	if (mAtlas.ShouldGenerate ()) {
+		mAtlas.Generate ();
+		printf ("Regenerated Atlas\n");
+	}
+
+	glm::mat4 _view;
+	glm::mat4 _projection;
+
+	_view = camera->getView ();
+	_projection = glm::perspective(glm::radians (45.0f), 1.0f, 0.1f, 100.0f);
+
+	//glBindFramebuffer (GL_FRAMEBUFFER, mSceneFrameBuffer.Get ());
+	glEnable (GL_DEPTH_TEST);
+
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+
+	AssetManager * am = AssetManager::GetInstance ();
+	for (auto & [_shaderID, _group] : mGroups) {
+
+		const Shader * _shader = am->GetShader (_shaderID);
+		_group.SetTextureRegenerate (false);
+
+		_group.UploadDrawCommands ();
+		_group.UploadInstances ();
+
+		_group.Bind ();
+
+		_shader->use ();
+		_shader->upload1i	("uAtlas", 0);
+		_shader->uploadMatrix4	("uProjection", _projection);
+		_shader->uploadMatrix4	("uView", _view);
+
+		glActiveTexture (GL_TEXTURE0 + 0);
+		glBindTexture   (GL_TEXTURE_2D_ARRAY, mAtlas.Get ());
+		glMultiDrawElementsIndirect (GL_TRIANGLES, GL_UNSIGNED_INT, nullptr, _group.GetCommandsCount (), 0);
+	
+		_shader->cancel ();
+
+		_group.Unbind ();
+
+		_group.ClearInstances ();
+	}
+
+	Clear ();
+	c++;
+
+	//glBindVertexArray (mFBVAO);
+	//glDisable (GL_DEPTH_TEST);
+	//glActiveTexture (GL_TEXTURE0);
+//
+	//unsigned int current_color = mSceneFrameBuffer.GetColorAttachment (0);
+	//
+	//int idx = 0;
+	//for (auto & [name, effect] : mEffects) {
+	//	if (!effect.active) continue;
+	//	unsigned int _framebuffer = mPingPong[idx].Get ();
+	//	//printf ("framebuffer = %u\n", _framebuffer);
+	//	glBindFramebuffer (GL_FRAMEBUFFER, _framebuffer);
+	//	
+	//	//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//	const Shader & _postProcess = pAssetManager->GetShader (effect.postProcess);
+	//	_postProcess.use ();
+	//	_postProcess.upload1i ("uFrame", 0);
+//
+	//	effect.params.Upload (_postProcess);
+//
+	//	glBindTexture(GL_TEXTURE_2D, current_color);
+//
+	//	glDrawArrays (GL_TRIANGLES, 0, 6);
+//
+	//	_postProcess.cancel ();
+	//	current_color = mPingPong[idx].GetColorAttachment (0);
+	//	idx = 1 - idx;
+	//}
+	
+	//glBindFramebuffer (GL_FRAMEBUFFER, 0);
+	//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//const Shader & _quadBlit = pAssetManager->GetShader (mFinalBlit);
+	//_quadBlit.use ();
+	//_quadBlit.upload1i ("uFrame", 0);
+	//glBindTexture(GL_TEXTURE_2D, current_color);
+	//glDrawArrays (GL_TRIANGLES, 0, 6);
+	//glBindVertexArray (0);
+}
+
+void InstanceRenderer::PushModel (Instance<Model> & model, const HandleID & shader) {
+	if (mInstances.find (model.GetID ()) != mInstances.end ()) {
+		// instance already exists, we don't add it back
+		return;
+	}
+
+	mInstances.insert (model.GetID ());
+	for (auto & mesh : model.meshes) {
+		//std::cout << "Mesh with verticesID=" << mesh.vertices << " added\n";
+		RenderCommand command;
+		command.shaderID   = shader;
+		command.verticesID = mesh.vertices;
+		command.indicesID  = mesh.indices;
+		command.material   = mesh.material;
+		command.transform  = mesh.transform * model.transform; // maybe not in this order, idk i'm dumb
+		command.visible    = mesh.visible; // obviously don't do that
+
+		mCommands.push_back (command);
+	}
+}
+
+void InstanceRenderer::AddPostProcessingEffect (std::string name, Core::HandleID shader) {
+	mEffects.emplace_back (std::piecewise_construct, std::forward_as_tuple (name), std::forward_as_tuple (shader, 1));
+}
+
+void InstanceRenderer::AddPostProcessingEffect (std::string name, HandleID shader, size_t colorAttachmentCount, ShaderInputs && params) {
+	mEffects.emplace_back (std::piecewise_construct, std::forward_as_tuple (name), std::forward_as_tuple (shader, colorAttachmentCount, std::move (params)));
+
+	while (colorAttachmentCount > mMaxColorAttachment) {
+		for (auto & target: mPingPong) {
+			target.AddColorAttachment ();
+		}
+		++mMaxColorAttachment;
+	}
+}
+
+void InstanceRenderer::DisablePostProcessingEffect (std::string name) {
+	//TODO-implement
+}
+
+void InstanceRenderer::RemovePostProcessingEffect (std::string name) {
+	//TODO-implement
+}
+
+void InstanceRenderer::Clear () {
+	mInstances.clear ();
+	mCommands.clear ();
+}
+
+
+
+RenderingGroup::RenderingGroup (TextureAtlas * atlas):
+	mCurrentVertexCount   {0},
+	mCurrentIndexCount    {0},
+	mDirtyTextures        {true},
+	pAtlas                {atlas}
 	{
 
 	glGenVertexArrays(1, &vao);
@@ -33,108 +224,114 @@ RenderingGroup::RenderingGroup (ShaderID shader, const SceneGraph * graph, const
 	glGenBuffers (1, &dibo);
 
 	glGenBuffers (1, &ssbo);
-}
-
-void RenderingGroup::Init () {
-	size_t _geometryCount	= pScene->GetGeometryCount ();
-	size_t _meshCount	= pScene->GetTotalMeshCount ();
-
-	GenerateAttributes ();
 
 	Bind ();
-
-	//TODO-warn: max_vertex_count and max_index_count shall be fetched from scene graph
-	glNamedBufferData (vbo,   max_vertex_count   * sizeof (Vertex),      NULL, GL_DYNAMIC_DRAW);
-	glNamedBufferData (ibo,   max_index_count    * sizeof (uint32_t),    NULL, GL_DYNAMIC_DRAW);
-	glNamedBufferData (dibo,  _geometryCount     * sizeof (DrawCommand), NULL, GL_DYNAMIC_DRAW);
-
+	
+	std::cout << "Before Allocating Buffers\n";
+	// Completly arbitrary values, must allow resizing
+	// TODO-asap: allow buffer resizing
+	glNamedBufferData (vbo,   10000000 * sizeof (Vertex),      NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (ibo,   10000000 * sizeof (uint32_t),    NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (dibo,  100000   * sizeof (DrawCommand), NULL, GL_DYNAMIC_DRAW);
+	std::cout << "After Allocating Buffers\n";
+	
 	glBindBufferBase (GL_SHADER_STORAGE_BUFFER, 0, ssbo);
-	glNamedBufferData (ssbo,  _meshCount         * sizeof (Instance),    NULL, GL_DYNAMIC_DRAW);
+	glNamedBufferData (ssbo,  100000   * sizeof (InstanceRenderData), NULL, GL_DYNAMIC_DRAW);
 
+	GenerateAttributes ();
 	Unbind ();
 }
 
-void RenderingGroup::GenerateDrawCommands () {
-	commands.clear ();
-	geometries.clear ();
+void RenderingGroup::Push (const RenderCommand & command) {
+	// mesh instance count
+	if (mKnownGeometry.find (command.verticesID) == mKnownGeometry.end ()) {
+		AssetManager * am = AssetManager::GetInstance ();
 
-	uint32_t _vertexCount  = 0;
-	uint32_t _indexCount   = 0;
-	uint32_t _baseInstance = 0;
+		// its the first time encoutering this verticesID
+		// create a new DrawCommand and allocate memory on the gpu
+		// assetManager needs to be a singleton to be allowed access in here
 
-	for (const auto &[_geometryID, _] : pScene->GetMeshes ()) {
-		const Geometry & _geometry = pManager->GetGeometry (_geometryID);
-		uint32_t _instanceCount = pScene->GetInstanceCount (_geometryID);
+		std::cout << "DrawCommand Generation: VerticesID=" << command.verticesID << "\n";
 
-		commands.emplace_back (
-			_geometry.indices.size (),
-			_instanceCount,
-			_indexCount,
-			_vertexCount,
-			_baseInstance
-		);
+		const std::vector<Vertex>   _vertices = am->GetVertices (command.verticesID);
+		const std::vector<uint32_t> _indices  = am->GetIndices  (command.indicesID);
 
-		geometries.emplace_back (_geometryID);
+		//printVector (_vertices, "Vertices");
+		//printVector (_indices, "Indices");
 
-		_vertexCount  += _geometry.vertices.size ();
-		_indexCount   += _geometry.indices .size ();
-		_baseInstance += _instanceCount;
-	}
-}
+		DrawCommand _command;
+		_command.index_count    = _indices.size ();
+		_command.instance_count = 0;
+		_command.base_index     = mCurrentIndexCount;
+		_command.base_vertex    = mCurrentVertexCount;
+		_command.base_instance  = 0;
 
-void RenderingGroup::UploadBuffers () {
-	uint32_t _vertexCount = 0;
-	uint32_t _indexCount = 0;
+		mGeometryToCommands.emplace (command.verticesID, mDrawCommands.size ());
+		mDrawCommands.emplace_back (_command);
 
-	for (size_t idx = 0; idx < geometries.size (); ++idx) {
-		GeometryID _geometryID	= geometries[idx];
-		Geometry & _geometry	= pManager->GetGeometry (_geometryID);
-		
+		// TODO: reallocate buffers if necessary
+
 		glNamedBufferSubData (
 			vbo, 
-			_vertexCount * sizeof (Vertex),
-			_geometry.vertices.size () * sizeof (Vertex),
-			(void *) (_geometry.vertices.data ())
+			mCurrentVertexCount * sizeof (Vertex),
+			_vertices.size ()   * sizeof (Vertex),
+			(void *) (_vertices.data ())
 		);
 		
 		glNamedBufferSubData (
 			ibo, 
-			_indexCount * sizeof (uint32_t),
-			_geometry.indices.size () * sizeof (uint32_t),
-			(void *) (_geometry.indices.data ())
+			mCurrentIndexCount * sizeof (uint32_t),
+			_indices.size ()   * sizeof (uint32_t),
+			(void *) (_indices.data ())
 		);
 
-		_vertexCount += _geometry.vertices.size ();
-		_indexCount  += _geometry.indices .size ();
+		mCurrentVertexCount += _vertices.size ();
+		mCurrentIndexCount  += _indices .size ();
+
+		mInstances.emplace (command.verticesID, std::vector<InstanceRenderData> {});
+		mKnownGeometry.emplace (command.verticesID);
 	}
 
+	size_t _commandIndex = mGeometryToCommands.at (command.verticesID);
+
+	// needs to increase number of instances
+	DrawCommand & _command = mDrawCommands.at (_commandIndex);
+	++_command.instance_count;
+	//printf ("command.instance_count=%u\n", _command.instance_count);
+
+	// and offset base_instance of subsequent draw commands
+	for (size_t idx = _commandIndex + 1; idx < mDrawCommands.size (); ++idx) {
+		mDrawCommands[idx].base_instance = mDrawCommands[idx-1].base_instance + mDrawCommands[idx-1].instance_count;
+	}
+
+
+	// mesh instance data
+	// aka transform, textures, material and whatnot
+	mDirtyTextures = pAtlas->Feed (command.material.GetTextures ()) || mDirtyTextures;
+	mInstances.at (command.verticesID).push_back (InstanceRenderData {
+		command.transform,
+		CoordsRatio (command.material),
+		glm::vec4 {command.material.GetColor (), 1.0}});
+
+	// TODO-fix: expand buffer if not large enough when adding renderables
+}
+
+void RenderingGroup::UploadDrawCommands () {
 	glNamedBufferSubData (
 		dibo,
 		0,
-		commands.size () * sizeof (DrawCommand),
-		(void *) (commands.data ())
+		mDrawCommands.size () * sizeof (DrawCommand),
+		(void *) (mDrawCommands.data ())
 	);
 }
-#include <iostream>
-void RenderingGroup::UploadInstance () {
-	std::vector<Instance> _instances;
+
+
+void RenderingGroup::UploadInstances () {
+	std::vector<InstanceRenderData> _instances;
 	
-	for (size_t idx = 0; idx < geometries.size (); ++idx) {
-		GeometryID _geometryID = geometries[idx];
-		
-		for (const auto & mesh : pScene->GetMeshes ().at (_geometryID)) {
-			
-			const Material & _material = pManager->GetMaterial (mesh->material);
-			
-			// TODO-fix: get parent model matrix to get child transform
-			// TODO-change: create maybe a buffer of materials ? instead of doing it per instance ? but doing it per instance does have benefit
-			_instances.push_back (Instance {
-				mesh->position,
-				mesh->rotation,
-				mesh->scale,
-				CoordsRatio (mesh),
-				_material.color
-			});
+	for (auto & [_, _instanceVec] : mInstances) {
+		for (auto & _instanceData : _instanceVec) {
+			_instances.push_back (_instanceData);
 		}
 	}
 
@@ -142,9 +339,20 @@ void RenderingGroup::UploadInstance () {
 	glNamedBufferSubData (
 		ssbo,
 		0,
-		sizeof (Instance) * _instances.size (),
+		sizeof (InstanceRenderData) * _instances.size (),
 		(void*) (_instances.data ())
 	);
+}
+
+void RenderingGroup::ClearInstances () {
+	for (auto & [_, _instanceVec] : mInstances) {
+		_instanceVec.clear ();
+	}
+
+	for (auto & command : mDrawCommands) {
+		command.base_instance = 0;
+		command.instance_count = 0;
+	}
 }
 
 void RenderingGroup::GenerateAttributes () {
@@ -197,24 +405,21 @@ void RenderingGroup::GenerateAttributes () {
 	glEnableVertexAttribArray (3);
 }
 
-glm::vec4 RenderingGroup::CoordsRatio (const Mesh * mesh) const {
-	Material _material = pManager->GetMaterial (mesh->material);
-
-	// TODO-fix: generate multiple coords for multiple textures maybe ?
-	if (_material.diffuse_textures.size () > 0) {
-		const TextureQuad * _quad = pAtlas->Quad (_material.diffuse_textures[0]);
+glm::vec4 RenderingGroup::CoordsRatio (const Instance<Material> & material) const {
+	if (material.GetTextures ().size () > 0) {
+		const TextureQuad * _quad =  pAtlas->Quad (material.GetTextures ()[0]);
 		if (_quad) {
 			float x = _quad->x / pAtlas->Width  ();
 			float w = _quad->w / pAtlas->Width  ();
-	
+
 			float y = _quad->y / pAtlas->Height ();
 			float h = _quad->h / pAtlas->Height ();
 			
-			return (glm::vec4 {x, y, w, h});
+			return glm::vec4 {x, y, w, h};
 		}
 	}
 
-	return (glm::vec4 (0.0, 0.0, -1.0, -1.0));
+	return glm::vec4 (0.0, 0.0, -1.0, -1.0);
 
 }
 
@@ -234,207 +439,14 @@ void RenderingGroup::Unbind () {
 	glBindBuffer (GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-InstanceRenderer::InstanceRenderer (Scene * scene):
-	mAtlas {&scene->asset_manager},
-	IRenderer {scene}
-	{
-	mFinalBlit = pAssetManager->LoadShader ("blit_quad", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/blit_quad.fragment");
-	mPingPong.reserve (2);
+uint32_t RenderingGroup::GetCommandsCount () {
+	return mDrawCommands.size ();
 }
 
-InstanceRenderer::~InstanceRenderer () {
-	glDeleteVertexArrays (1, &mFBVAO);
-	glDeleteBuffers (1, &mFBVBO);
-};
-
-void InstanceRenderer::Init (int width, int height) {
-	// TODO-fix: generate groups here
-	pGraph->Traverse ([this] (Vector<UPtr<Mesh>> & meshes) {
-		for (const auto & _mesh : meshes) {
-			Material _material = this->pAssetManager->GetMaterial (_mesh->material);
-			this->mAtlas.Feed (_material.diffuse_textures);
-		}
-	});
-	mAtlas.Generate ();
-
-
-	mGroups.clear ();
-
-	mGroups.emplace_back (DefaultShader (), pGraph, pAssetManager, &mAtlas);
-	mGroups.back ().Init (); // TODO-fix: assign each mesh to a group
-
-	
-	mSceneFrameBuffer.Init (width, height); // scene
-
-	mPingPong.emplace_back (width, height); // post process A
-	mPingPong.emplace_back (width, height); // post process B
-
-
-	float _quad[] = {
-		-1.0,  1.0,   0.0, 1.0,
-		-1.0, -1.0,   0.0, 0.0,
-		 1.0, -1.0,   1.0, 0.0,
-
-		-1.0,  1.0,   0.0, 1.0,
-		 1.0, -1.0,   1.0, 0.0,
-		 1.0,  1.0,   1.0, 1.0
-	};
-	glGenVertexArrays (1, &mFBVAO);
-	glGenBuffers (1, &mFBVBO);
-
-	glBindVertexArray (mFBVAO);
-	glBindBuffer (GL_ARRAY_BUFFER, mFBVBO);
-	glBufferData (GL_ARRAY_BUFFER, sizeof (_quad), _quad, GL_STATIC_DRAW);
-	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) 0);
-	glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) (2 * sizeof (float)));
-	glEnableVertexAttribArray (0);
-	glEnableVertexAttribArray (1);
+bool RenderingGroup::ShouldRegenerateTexture () {
+	return mDirtyTextures;
 }
 
-void InstanceRenderer::Render (Camera * camera) {
-	glm::mat4 _view;
-	glm::mat4 _projection;
-
-	_view = camera->getView ();
-	_projection = glm::perspective(glm::radians (45.0f), 1.0f, 0.1f, 100.0f);
-
-	glBindFramebuffer (GL_FRAMEBUFFER, mSceneFrameBuffer.Get ());
-	glEnable (GL_DEPTH_TEST);
-
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-	for (auto & _group : mGroups) {
-		Shader * _shader = &pAssetManager->GetShader (_group.shader);
-		// TODO-fix: make it less weird
-		if (_group.dirty) {
-			_group.GenerateDrawCommands ();
-			_group.UploadInstance ();
-			_group.UploadBuffers ();
-			_group.dirty = false;
-		}
-		_group.Bind ();
-
-		_shader->use ();
-		_shader->upload1i	("uAtlas", 0);
-		_shader->uploadMatrix4	("uProjection", _projection);
-		_shader->uploadMatrix4	("uView", _view);
-
-		glActiveTexture (GL_TEXTURE0 + 0);
-		glBindTexture   (GL_TEXTURE_2D_ARRAY, mAtlas.Get ());
-		glMultiDrawElementsIndirect (GL_TRIANGLES, GL_UNSIGNED_INT, nullptr, _group.commands.size (), 0);
-	
-		_shader->cancel ();
-
-		_group.Unbind ();
-	}
-
-	glBindVertexArray (mFBVAO);
-	glDisable (GL_DEPTH_TEST);
-	glActiveTexture (GL_TEXTURE0);
-
-	unsigned int current_color = mSceneFrameBuffer.GetColorAttachement ();
-	
-	int idx = 0;
-	for (auto & [name, effect] : mEffects) {
-		if (!effect.active) continue;
-		unsigned int _framebuffer = mPingPong[idx].Get ();
-		//printf ("framebuffer = %u\n", _framebuffer);
-		glBindFramebuffer (GL_FRAMEBUFFER, _framebuffer);
-		
-		//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		const Shader & _postProcess = pAssetManager->GetShader (effect.postProcess);
-		_postProcess.use ();
-		_postProcess.upload1i ("uFrame", 0);
-//
-		glBindTexture(GL_TEXTURE_2D, current_color);
-//
-		glDrawArrays (GL_TRIANGLES, 0, 6);
-//
-		_postProcess.cancel ();
-		current_color = mPingPong[idx].GetColorAttachement ();
-		idx = 1 - idx;
-	}
-	
-	glBindFramebuffer (GL_FRAMEBUFFER, 0);
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	const Shader & _quadBlit = pAssetManager->GetShader (mFinalBlit);
-	_quadBlit.use ();
-	_quadBlit.upload1i ("uFrame", 0);
-	glBindTexture(GL_TEXTURE_2D, current_color);
-	glDrawArrays (GL_TRIANGLES, 0, 6);
-	glBindVertexArray (0);
-
-}
-
-void InstanceRenderer::AddPostProcessingEffect (std::string name, ShaderID shader) {
-	mEffects.emplace_back (name, shader);
-}
-
-void InstanceRenderer::DisablePostProcessingEffect (std::string name) {
-
-}
-
-void InstanceRenderer::RemovePostProcessingEffect (std::string name) {
-
-}
-
-PostProcessingEffect::PostProcessingEffect (ShaderID shader):
-	postProcess {shader},
-	active {true}
-	{
-	
-}
-
-FrameBuffer::FrameBuffer () :
-	mFrameBuffer {0},
-	mTextureColorBuffer {0},
-	mRenderBuffer {0}
-	{
-
-}
-
-FrameBuffer::FrameBuffer (int width, int height) {
-	Init (width, height);
-}
-
-FrameBuffer::~FrameBuffer () {
-	if (mFrameBuffer) {
-		printf ("framebuffer deleted: %u\n", mFrameBuffer);
-		glDeleteFramebuffers	(1, &mFrameBuffer);
-		glDeleteRenderbuffers	(1, &mRenderBuffer);
-		glDeleteTextures	(1, &mTextureColorBuffer);
-	}
-}
-
-void FrameBuffer::Init (int width, int height) {
-	glGenFramebuffers (1, &mFrameBuffer);
-	glBindFramebuffer (GL_FRAMEBUFFER, mFrameBuffer);
-
-	glGenTextures (1, &mTextureColorBuffer);
-	glBindTexture (GL_TEXTURE_2D, mTextureColorBuffer);
-	glTexImage2D  (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture (GL_TEXTURE_2D, 0);
-
-	glGenRenderbuffers (1, &mRenderBuffer);
-	glBindRenderbuffer (GL_RENDERBUFFER, mRenderBuffer);
-	glRenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-	glBindRenderbuffer (GL_RENDERBUFFER, 0);
-
-	glFramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextureColorBuffer, 0);
-	glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRenderBuffer);
-
-	if (glCheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		printf ("SceneFrameBuffer is not complete :(\n");
-	}
-	glBindFramebuffer (GL_FRAMEBUFFER, 0);
-}
-
-unsigned int FrameBuffer::Get () const {
-	return (mFrameBuffer);
-}
-
-unsigned int FrameBuffer::GetColorAttachement () const {
-	return (mTextureColorBuffer);
+void RenderingGroup::SetTextureRegenerate (bool flag) {
+	mDirtyTextures = flag;
 }

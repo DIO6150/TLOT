@@ -184,3 +184,14 @@ inline void printMat4(const glm::mat4& m, const std::string& name = "Matrix") {
         std::cout << "]" << std::endl;
     }
 }
+
+#include <vector>
+
+template<class T>
+inline void printVector(const std::vector<T> & vec, const std::string & name = "Vector") {
+	std::cout << name << " : [";
+	for (const auto & e : vec) {
+		std::cout << e << ",\n";
+	}
+	std::cout << "]\n";
+}

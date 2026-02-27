@@ -48,7 +48,7 @@ void Scene::Load (const std::string & url) {
 	std::string directory = url.substr(0, url.find_last_of('/'));
 
 	Assimp::Importer importer;
-	const aiScene *scene = importer.ReadFile(url, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+	const aiScene *scene = importer.ReadFile (url, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_CalcTangentSpace);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		std::string error {importer.GetErrorString ()};

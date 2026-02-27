@@ -22,9 +22,10 @@ namespace Engine::Data {
 		void cancel () const;
 
 		// TODO-add : cache system
-		void uploadMatrix4	(std::string key, glm::mat4& matrix) const;
+		void uploadMatrix4	(std::string key, const glm::mat4& matrix) const;
 		void upload1i		(std::string key, int i) const;
 		void upload3fv		(std::string key, glm::vec3 vec) const;
+		void upload1f		(std::string key, float f) const;
 
 	private:	
 		uint32_t					m_program;
