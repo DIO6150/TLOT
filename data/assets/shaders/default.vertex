@@ -22,8 +22,6 @@ out vec3 vNormals;
 out vec2 vTexCoords;
 out vec3 vColor;
 
-out int vBColor;
-
 out int vInstanceID;
 
 void main() {
@@ -33,11 +31,6 @@ void main() {
 	vTexCoords = aTexCoords * data[gl_BaseInstance + gl_InstanceID].coords.zw + data[gl_BaseInstance + gl_InstanceID].coords.xy;
 	vColor = data[gl_BaseInstance + gl_InstanceID].color;
 	vInstanceID = gl_InstanceID + gl_BaseInstance;
-	
-	vBColor = 0;
-	if (data[gl_BaseInstance + gl_InstanceID].coords.z < 0 || data[gl_BaseInstance + gl_InstanceID].coords.w < 0) {
-		vBColor = 1;
-	}
 
 	gl_Position = pos;
 };

@@ -11,9 +11,6 @@ FrameBuffer::FrameBuffer (int32_t width, int32_t height):
 	mWidth  {width},
 	mHeight {height}	
 	{
-
-	return;
-
 	mColorAttachments.resize (1);
 
 	glGenFramebuffers (1, &mFrameBuffer);
@@ -37,21 +34,21 @@ FrameBuffer::FrameBuffer (int32_t width, int32_t height):
 	glFramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRenderBuffer);
 
 	if (glCheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		printf ("SceneFrameBuffer is not complete :(\n");
+		printf ("ERROR: FrameBuffer is not complete :(\n");
+		exit (-1);
 	}
 	glBindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 
 FrameBuffer::~FrameBuffer () {
-	return;
 	printf ("framebuffer deleted: %u\n", mFrameBuffer);
 	glDeleteFramebuffers	(1, &mFrameBuffer);
 	glDeleteRenderbuffers	(1, &mRenderBuffer);
 	glDeleteTextures	(mColorAttachments.size (), mColorAttachments.data ());
 }
 
-uint32_t FrameBuffer::AddColorAttachment () {
-	return 0;
+void FrameBuffer::AddColorAttachment () {
+	// TODO: should return binding point
 	mColorAttachments.emplace_back (0);
 
 	glGenTextures   (1, &mColorAttachments.back ());

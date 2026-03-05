@@ -7,7 +7,7 @@
 namespace Engine::Internal {
 	class FrameBuffer {
 	public:
-		uint32_t AddColorAttachment ();
+		void AddColorAttachment ();
 
 		uint32_t Get () const;
 		uint32_t GetColorAttachment (uint32_t binding) const;

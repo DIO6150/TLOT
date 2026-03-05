@@ -69,9 +69,46 @@ AssetManager * AssetManager::GetInstance () {
 
 AssetManager::AssetManager () {
 	// TODO: make it load from code rather than from direct assets
-	defaultTextureID = LoadTexture ("default", "data/assets/textures/default.png");
-	defaultShaderID  = LoadShader  ("default", "data/assets/shaders/default.vertex", "data/assets/shaders/default.fragment");
-	defaultMaterialID = CreateMaterial ("default", {defaultTextureID});
+
+	unsigned char *textureData = new unsigned char[4];
+	textureData[0] = 255;
+	textureData[1] = 255;
+	textureData[2] = 255;
+	textureData[3] = 255;
+	defaultTextureID = textureIDs.create (textureData, 1, 1);
+	textureNames.add ("tlot_default", defaultTextureID);
+
+	textureData = new unsigned char[16];
+	textureData[0]  = 0;
+	textureData[1]  = 0;
+	textureData[2]  = 0;
+	textureData[3]  = 255;
+
+	textureData[4]  = 255;
+	textureData[5]  = 0;
+	textureData[6]  = 0;
+	textureData[7]  = 255;
+
+	textureData[8]  = 0;
+	textureData[9]  = 0;
+	textureData[10] = 0;
+	textureData[11] = 255;
+
+	textureData[12] = 255;
+	textureData[13] = 0;
+	textureData[14] = 0;
+	textureData[15] = 255;
+
+	missingTextureID = textureIDs.create (textureData, 1, 1);
+	textureNames.add ("tlot_missing", missingTextureID);
+
+
+	//defaultTextureID = LoadTexture ("default", "data/assets/textures/default.png");
+	
+	defaultShaderID  = LoadShader ("tlot_default", "data/assets/shaders/default.vertex", "data/assets/shaders/default.fragment");
+
+	defaultMaterialID = CreateMaterial ("tlot_default", {defaultTextureID}, {1.0, 1.0, 1.0});
+	
 }
 
 HandleID AssetManager::ProcessMesh (aiMesh * assimpMesh, aiMaterial * assimpMaterial, const std::string & directory) {
@@ -98,8 +135,6 @@ HandleID AssetManager::ProcessMesh (aiMesh * assimpMesh, aiMaterial * assimpMate
 		printf ("failed to allocate vertices\n");
 	}
 
-	std::cout << "VerticesID = " << _verticesID << "\n";
-
 	_indicesID = mIndicesIDs.Push (_indices);
 	if (!_indicesID.isValid ()) {
 		printf ("failed to allocate indices\n");
@@ -114,16 +149,23 @@ HandleID AssetManager::ProcessMesh (aiMesh * assimpMesh, aiMaterial * assimpMate
 			HandleID _diffuse = LoadTexture (_texName, directory + "/" + _path);
 
 			if (!_diffuse.isValid ()){
-				_diffuse = defaultTextureID;
+				_diffuse = missingTextureID;
 			}
 
 			_diffuseIDS.push_back (_diffuse);
 		}
 
-		_materialID = CreateMaterial (_materialName, _diffuseIDS);
+		if (_diffuseIDS.empty ()){
+			_diffuseIDS.push_back (defaultTextureID);
+		}
+
+		aiColor3D _diffuseColorAssimp;
+		assimpMaterial->Get (AI_MATKEY_COLOR_DIFFUSE, _diffuseColorAssimp);
+
+		_materialID = CreateMaterial (_materialName, _diffuseIDS, {_diffuseColorAssimp.r, _diffuseColorAssimp.g, _diffuseColorAssimp.b});
 	}
 
-	HandleID _resource = meshIDs.create (_verticesID, _indicesID, _materialID, glm::mat4 {1.0}, _meshName);
+	HandleID _resource = meshIDs.create (_verticesID, _indicesID, _materialID, glm::vec3 {0.0}, glm::vec3 {0.0}, glm::vec3 {1.0}, _meshName);
 	meshNames.add (_meshName, _resource);
 
 	return (_resource);
@@ -144,6 +186,7 @@ HandleID AssetManager::LoadTexture (const String & name, const String & url) {
 		return resource;
 	}
 
+	std::cout << "Couldn't create texture:" << name << ", defaulting.\n";
 	return HandleID::invalid ();
 }
 
@@ -196,13 +239,13 @@ HandleID AssetManager::LoadModel (const String & name, const String & url) {
 	return (resource);
 }
 
-HandleID AssetManager::CreateMaterial (const String & name, Vector<HandleID> diffuse) {
+HandleID AssetManager::CreateMaterial (const String & name, Vector<HandleID> diffuse, glm::vec3 color) {
 	HandleID * resource_ptr = materialNames.get_ptr (name);
 	if (resource_ptr) {
 		return (*resource_ptr);
 	}
 
-	HandleID resource = materialIDs.create (diffuse);
+	HandleID resource = materialIDs.create (diffuse, color);
 	materialNames.add (name, resource);
 
 	return (resource);
@@ -216,6 +259,11 @@ HandleID AssetManager::GetShaderID (const String & name) const {
 HandleID AssetManager::GetTextureID (const String & name) const {
 	HandleID * pos = textureNames.get_ptr (name);
 	return pos ? *pos : HandleID::invalid ();
+}
+
+const std::string AssetManager::GetTextureName (const HandleID & handle) const {
+	const String * name = textureNames.get_name (handle);
+	return name ? *name : "invalid";
 }
 
 HandleID AssetManager::GetMaterialID (const String & name) const {
@@ -259,4 +307,13 @@ std::vector<Vertex> AssetManager::GetVertices (HandleID verticesID) {
 
 std::vector<uint32_t> AssetManager::GetIndices (HandleID indicesID) {
 	return (mIndicesIDs[indicesID]);
+}
+
+
+uint32_t AssetManager::GetVerticesSize (HandleID verticesID) {
+	return ((uint32_t)mVerticesIDs.GetSize (verticesID));
+}
+
+uint32_t AssetManager::GetIndicesSize  (HandleID indicesID) {
+	return ((uint32_t)mIndicesIDs.GetSize  (indicesID));
 }

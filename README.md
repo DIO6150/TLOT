@@ -8,7 +8,7 @@ TLOT is a game engine I'm developping for my final uni assignement "Scopalatro" 
 
 Building : ```make``` at project root directory. Modify the makefile to fit your needs. (i'm not even sure it works on linux)
 
-# TODO
+## TODO
 
 - Restore EventManager and allow script + compile time events (compile time has more priority)
 - Restore frameBuffers
@@ -34,5 +34,5 @@ ___
 
 - Add an animation feature (very low prio)
 
-# Notes
+## Notes
 - the "bottleneck" is adding/removing meshes from the renderer: we're recalculating and resending instance data every frames, not good, it starts getting really bad at ~40000 meshes (Chiori $+$ Columbina model $\times$  2000) (its still not good before but eh)

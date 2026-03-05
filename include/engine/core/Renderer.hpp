@@ -10,6 +10,7 @@ namespace Engine::Core {
 	class IRenderer {
 	public:
 		virtual void PushModel (Instance<Model> & model, const HandleID & shaderID) = 0;
+		virtual void UpdateModelTransform (Instance<Model> & model) = 0;
 		virtual void Render (Module::Camera * camera) = 0;
 	};
 }

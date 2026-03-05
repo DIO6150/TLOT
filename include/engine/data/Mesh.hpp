@@ -16,7 +16,9 @@ namespace Engine::Data {
 		Core::HandleID indices;
 		Core::HandleID material;
 
-		glm::mat4 transform;
+		glm::vec3 position;
+		glm::vec3 rotation;
+		glm::vec3 scaling;
 
 		std::string name;
 	};

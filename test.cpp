@@ -243,6 +243,32 @@ private:
 };
 
 
+class RenderableAccessor : public Renderable {
+public:
+	void SetRendererR (IRenderer & renderer)    { SetRenderer (renderer); }
+	void SetModelR    (const HandleID & model)  { SetModel (model); };
+	void SetShaderR   (const HandleID & shader) { SetShader (shader); };
+
+	void Translate (glm::vec3 pos) {
+		GetModel ().Translate (pos);
+		GetRenderer ().UpdateModelTransform (GetModel ());
+	}
+
+	void Rotate (glm::vec3 rot) {
+		GetModel ().Rotate (rot);
+		GetRenderer ().UpdateModelTransform (GetModel ());
+	}
+
+	void Scale (glm::vec3 scale) {
+		GetModel ().Scale (scale);
+		GetRenderer ().UpdateModelTransform (GetModel ());
+	}
+};
+
+
+// IDEA: get a flag back for a render command that is being owned by the renderer like a bool * that points to a unique_ptr or something idk
+// then we only need to check in O(1) if the mesh needs to be called PushModel upon or something...
+
 int main (int argc, char ** argv) {
 	#ifdef __linux__
 	glfwInitHint (GLFW_PLATFORM, GLFW_PLATFORM_X11);
@@ -266,6 +292,8 @@ int main (int argc, char ** argv) {
 		exit (-1);
 	}
 
+	enableOpenGLDebugCallback ();
+
 	glfwSetInputMode (window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glEnable (GL_DEPTH_TEST);
@@ -280,34 +308,41 @@ int main (int argc, char ** argv) {
 
 	stbi_set_flip_vertically_on_load(0);
 
-	enableOpenGLDebugCallback ();
+	InstanceRenderer renderer {800, 800};
 
 	AssetManager * am = AssetManager::GetInstance ();
-	
-	std::vector<Instance<Model>> models;
-	for (int i = 1; i < argc; ++i) {
-		std::cout << argv[i] << "\n";
-		for (int j = 0; j < 1; ++j) {
-			models.push_back (InstanceFactory<Model>::CreateInstance (am->LoadModel (argv[i], argv[i])));
-		}
-	}
-	
-	//HandleID edge    = am->LoadShader ("edge", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/edge.postprocess.fragment");
-	//HandleID gray    = am->LoadShader ("gray", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/grayscale.postprocess.fragment");
-	//HandleID bnw     = am->LoadShader ("bnw", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/black_and_white.postprocess.fragment");
-	//HandleID inverse = am->LoadShader ("inverse", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/inverse.postprocess.fragment");
-	//HandleID render_input_test = am->LoadShader ("rit", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/test.postprocess.fragment");
+
 
 	HandleID default_shader = am->LoadShader ("default", "data/assets/shaders/default.vertex", "data/assets/shaders/default.fragment");
-
-	InstanceRenderer renderer {800, 800};
-	Camera cam;
 	
+	std::vector<RenderableAccessor> models;
+	for (int i = 1; i < argc; ++i) {
+		std::cout << argv[i] << "\n";
+		for (int j = 0; j < 4; ++j) {
+			RenderableAccessor _temp;
+			_temp.SetRendererR (renderer);
+			_temp.SetModelR (am->LoadModel (argv[i], argv[i]));
+			_temp.SetShaderR (default_shader);
+
+			models.push_back (_temp);
+		}
+	}
+
+	models[1].Translate ({1.0, 0.0, 0.0});
+	models[2].Translate ({0.0, 2.0, 0.0});
+	models[3].Translate ({0.0, 0.0, 1.0});
+	
+	HandleID edge = am->LoadShader ("edge", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/edge.postprocess.fragment");
+	//HandleID gray    = am->LoadShader ("gray", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/grayscale.postprocess.fragment");
+	HandleID bnw     = am->LoadShader ("bnw", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/black_and_white.postprocess.fragment");
+	HandleID inverse = am->LoadShader ("inverse", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/inverse.postprocess.fragment");
+	//HandleID render_input_test = am->LoadShader ("rit", "data/assets/shaders/blit_quad.vertex", "data/assets/shaders/test.postprocess.fragment");
+	Camera cam;
 
 	//renderer.AddPostProcessingEffect ("gray",	gray);
-	//renderer.AddPostProcessingEffect ("inverse",	inverse);
 	//renderer.AddPostProcessingEffect ("edge",	edge);
-	//renderer.AddPostProcessingEffect ("bnw", bnw);
+	//renderer.AddPostProcessingEffect ("bnw",	bnw);
+	//renderer.AddPostProcessingEffect ("inverse",	inverse);
 
 	//glm::vec3 color = {1.0f, 0.f, 0.f};
 
@@ -330,10 +365,15 @@ int main (int argc, char ** argv) {
 	//inputs.AddInput<glm::vec3> ("uColor", [&color] () -> const glm::vec3 & { return (color); });
 	//renderer.AddPostProcessingEffect ("rit", render_input_test, 1, std::move (inputs));
 
-	
+	long long unsigned int c = 0;
+
 	while (!glfwWindowShouldClose (window)) {
 		currentTime = glfwGetTime ();
 		deltaTime = currentTime - lastTime;
+
+		models[2].Rotate ({deltaTime * 100, 0.0, 0.0});
+		models[3].Rotate ({0.0, deltaTime * 100, 0.0});
+		models[1].Rotate ({0.0, 0.0, deltaTime * 100});
 
 		glfwGetCursorPos (window, &mouse_x, &mouse_y);
 		cam.rotate ({(mouse_x - last_x) * SENSITIVITY, (mouse_y - last_y) * -SENSITIVITY, 0.0});
@@ -381,12 +421,16 @@ int main (int argc, char ** argv) {
 			continue;
 		}
 
+		clock_t renderingModelsDelta = std::clock ();
 		for (auto & model : models) {
-			renderer.PushModel (model, default_shader);
+			model.Render ();
 		}
-		
-		// printf ("Currently Rendering\n");
+		renderingModelsDelta = std::clock () - renderingModelsDelta;
+		if (c % 100 == 0) std::cout << "Model draw call took " << renderingModelsDelta << "ms\n";
+		++c;
+		//printf ("Currently Rendering\n");
 		renderer.Render (&cam);
+
 		glfwSwapBuffers(window);
 		glfwPollEvents ();
 

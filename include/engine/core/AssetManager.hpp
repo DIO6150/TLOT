@@ -39,6 +39,16 @@ namespace Engine::Internal {
 			return nullptr;
 		}
 
+		const String * get_name (const T & ref) const {
+			const auto & pos = t_to_str.find (ref);
+
+			if (pos != t_to_str.end ()) {
+				return const_cast<String *> (&pos->second);
+			}
+
+			return nullptr;
+		}
+
 	private:
 		std::unordered_map<T, String> t_to_str;
 		std::unordered_map<String, T> str_to_t;
@@ -56,7 +66,7 @@ namespace Engine::Core {
 		HandleID LoadModel   (const String & name, const String & url);
 
 
-		HandleID CreateMaterial (const String & name, Vector<HandleID> diffuse);
+		HandleID CreateMaterial (const String & name, Vector<HandleID> diffuse, glm::vec3 color);
 
 
 		HandleID GetShaderID   (const String & name) const;
@@ -64,6 +74,9 @@ namespace Engine::Core {
 		HandleID GetMaterialID (const String & name) const;
 		HandleID GetMeshID     (const String & name) const;
 		HandleID GetModelID    (const String & name) const;
+
+
+		const std::string GetTextureName (const HandleID & name) const;
 		
 		
 		Data::Shader   * GetShader   (const HandleID & shaderID)   const;
@@ -75,6 +88,10 @@ namespace Engine::Core {
 		
 		std::vector<Data::Vertex> GetVertices (HandleID verticesID);
 		std::vector<uint32_t>     GetIndices  (HandleID indicesID);
+
+		uint32_t GetVerticesSize (HandleID verticesID);
+		uint32_t GetIndicesSize  (HandleID indicesID);
+
 		
 
 	private:
@@ -113,6 +130,7 @@ namespace Engine::Core {
 		Internal::RefMap<HandleID>	mModelNames;
 
 		HandleID defaultTextureID;
+		HandleID missingTextureID;
 		HandleID defaultShaderID;
 		HandleID defaultMaterialID;
 

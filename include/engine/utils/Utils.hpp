@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <filesystem>
 
+#include <ostream>
+
 #if _WIN32
 #include <windows.h>
 #endif
@@ -25,7 +27,7 @@ inline void GLAPIENTRY openglDebugCallback(
 	__attribute__((unused)) GLsizei length,
 	const GLchar* message,
 	__attribute__((unused)) const void* userParam) {
-	if (type != GL_DEBUG_TYPE_ERROR) return;
+	//if (type != GL_DEBUG_TYPE_ERROR) return;
 
 	std::cerr << "=== OpenGL Debug Message ===\n";
 	std::cerr << "Message: " << message << "\n";
@@ -74,14 +76,14 @@ inline void enableOpenGLDebugCallback () {
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(openglDebugCallback, nullptr);	
-	glDebugMessageControl(
-		GL_DONT_CARE,
-		GL_DONT_CARE,
-		GL_DONT_CARE,
-		0,
-		nullptr,
-		GL_TRUE
-	); // Active tout les types de messages
+	//glDebugMessageControl(
+	//	GL_DONT_CARE,
+	//	GL_DONT_CARE,
+	//	GL_DONT_CARE,
+	//	0,
+	//	nullptr,
+	//	GL_TRUE
+	//); // Active tout les types de messages
 }
 
 inline unsigned int getGLType (std::string e_type)
@@ -183,6 +185,11 @@ inline void printMat4(const glm::mat4& m, const std::string& name = "Matrix") {
         }
         std::cout << "]" << std::endl;
     }
+}
+
+inline std::ostream & operator<<(std::ostream& out, const glm::vec3 & v) {
+	out << "{" << v.x << ", " << v.y << ", " << v.z << "}";
+	return out;
 }
 
 #include <vector>

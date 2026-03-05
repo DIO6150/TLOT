@@ -35,7 +35,8 @@ Texture::Texture (unsigned char * data, size_t width, size_t height):
 }
 
 Texture::~Texture () {
-	printf ("destruction de donnée de texture %p\n", data);
+	// TODO-fix: vérifier si le constructeur est bien appelé, j'ai pas l'impression
+	printf ("Destruction de donnée de texture %p\n", data);
 	stbi_image_free (data);
 }
 
@@ -152,7 +153,6 @@ bool TextureAtlas::Feed (const Vector<HandleID> & textures) {
 			mToUpdate = true;
 			_result = true;
 			//mAtlas[_textureID] = std::make_unique<TextureQuad> (_quad);
-			std::cout << "Added TextureID=" << _textureID << "\n";
 			break;
 		}
 
@@ -189,6 +189,7 @@ void TextureAtlas::Generate () {
 
 	for (const auto & [_textureID, _quad] : mAtlas) {
 		const Texture * _texture = am->GetTexture (_textureID);
+		//std::cout << "texture name = " << am->GetTextureName (_textureID) << "\n";
 
 		//printf ("%f %f %f %f %d : %p\n", _quad->x, _quad->y, _quad->w, _quad->h, _quad->depth, _texture.data);
 
