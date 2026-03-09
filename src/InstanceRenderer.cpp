@@ -113,27 +113,27 @@ InstanceRenderer::InstanceRenderer (int32_t width, int32_t height):
 	mPingPong.emplace_back (width, height); // post process B
 
 
-	//float _quad[] = {
-	//	-1.0,  1.0,   0.0, 1.0,
-	//	-1.0, -1.0,   0.0, 0.0,
-	//	 1.0, -1.0,   1.0, 0.0,
-//
-	//	-1.0,  1.0,   0.0, 1.0,
-	//	 1.0, -1.0,   1.0, 0.0,
-	//	 1.0,  1.0,   1.0, 1.0
-	//};
-	//glGenVertexArrays (1, &mFBVAO);
-	//glGenBuffers (1, &mFBVBO);
-//
-	//glBindVertexArray (mFBVAO);
-	//glBindBuffer (GL_ARRAY_BUFFER, mFBVBO);
-	//glBufferData (GL_ARRAY_BUFFER, sizeof (_quad), _quad, GL_STATIC_DRAW);
-	//glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) 0);
-	//glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) (2 * sizeof (float)));
-	//glEnableVertexAttribArray (0);
-	//glEnableVertexAttribArray (1);
-	//glBindVertexArray (0);
-	//glBindBuffer (GL_ARRAY_BUFFER, 0);
+	float _quad[] = {
+		-1.0,  1.0,   0.0, 1.0,
+		-1.0, -1.0,   0.0, 0.0,
+		 1.0, -1.0,   1.0, 0.0,
+
+		-1.0,  1.0,   0.0, 1.0,
+		 1.0, -1.0,   1.0, 0.0,
+		 1.0,  1.0,   1.0, 1.0
+	};
+	glGenVertexArrays (1, &mFBVAO);
+	glGenBuffers (1, &mFBVBO);
+
+	glBindVertexArray (mFBVAO);
+	glBindBuffer (GL_ARRAY_BUFFER, mFBVBO);
+	glBufferData (GL_ARRAY_BUFFER, sizeof (_quad), _quad, GL_STATIC_DRAW);
+	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) 0);
+	glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof (float), (void *) (2 * sizeof (float)));
+	glEnableVertexAttribArray (0);
+	glEnableVertexAttribArray (1);
+	glBindVertexArray (0);
+	glBindBuffer (GL_ARRAY_BUFFER, 0);
 
 	mDebugMeshCounter = 0;
 }
@@ -161,8 +161,8 @@ void InstanceRenderer::Render (Camera * camera) {
 	_view = camera->getView ();
 	_projection = glm::perspective(glm::radians (45.0f), 1.0f, 0.1f, 100.0f);
 
-	//glBindFramebuffer (GL_FRAMEBUFFER, mSceneFrameBuffer.Get ());
-	//glEnable (GL_DEPTH_TEST);
+	glBindFramebuffer (GL_FRAMEBUFFER, mSceneFrameBuffer.Get ());
+	glEnable (GL_DEPTH_TEST);
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -191,43 +191,41 @@ void InstanceRenderer::Render (Camera * camera) {
 		_group.debugUpdate ();
 	}
 
-	//glBindVertexArray (mFBVAO);
-	//glDisable (GL_DEPTH_TEST);
-	//glActiveTexture (GL_TEXTURE0);
+	glBindVertexArray (mFBVAO);
+	glDisable (GL_DEPTH_TEST);
+	unsigned int current_color = mSceneFrameBuffer.GetColorAttachment (0);
+	
+	int idx = 0;
+	for (auto & [name, effect] : mEffects) {
+		if (!effect.active) continue;
+		unsigned int _framebuffer = mPingPong[idx].Get ();
+		//printf ("framebuffer = %u\n", _framebuffer);
+		glBindFramebuffer (GL_FRAMEBUFFER, _framebuffer);
+		
+		//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		const Shader * _postProcess = am->GetShader (effect.postProcess);
+		glBindTexture(GL_TEXTURE_2D, current_color);
 
-	//unsigned int current_color = mSceneFrameBuffer.GetColorAttachment (0);
-	//
-	//int idx = 0;
-	//for (auto & [name, effect] : mEffects) {
-	//	if (!effect.active) continue;
-	//	unsigned int _framebuffer = mPingPong[idx].Get ();
-	//	//printf ("framebuffer = %u\n", _framebuffer);
-	//	glBindFramebuffer (GL_FRAMEBUFFER, _framebuffer);
-	//	
-	//	//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//	const Shader * _postProcess = am->GetShader (effect.postProcess);
-	//	glBindTexture(GL_TEXTURE_2D, current_color);
-//
-	//	_postProcess->use ();
-	//	_postProcess->upload1i ("uFrame", 0);
-//
-	//	effect.params.Upload (*_postProcess);
-//
-//
-	//	glDrawArrays (GL_TRIANGLES, 0, 6);
-//
-	//	_postProcess->cancel ();
-	//	current_color = mPingPong[idx].GetColorAttachment (0);
-	//	idx = 1 - idx;
-	//}
-	//glBindFramebuffer (GL_FRAMEBUFFER, 0);
-	//glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//glBindTexture(GL_TEXTURE_2D, current_color);
-	//const Shader * _quadBlit = am->GetShader (mFinalBlit);
-	//_quadBlit->use ();
-	//_quadBlit->upload1i ("uFrame", 0);
-	//glDrawArrays (GL_TRIANGLES, 0, 6);
-	//glBindVertexArray (0);
+		_postProcess->use ();
+		_postProcess->upload1i ("uFrame", 0);
+
+		effect.params.Upload (*_postProcess);
+
+
+		glDrawArrays (GL_TRIANGLES, 0, 6);
+
+		_postProcess->cancel ();
+		current_color = mPingPong[idx].GetColorAttachment (0);
+		idx = 1 - idx;
+	}
+	glBindFramebuffer (GL_FRAMEBUFFER, 0);
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glBindTexture(GL_TEXTURE_2D, current_color);
+	const Shader * _quadBlit = am->GetShader (mFinalBlit);
+	_quadBlit->use ();
+	_quadBlit->upload1i ("uFrame", 0);
+	glDrawArrays (GL_TRIANGLES, 0, 6);
+	glBindVertexArray (0);
 
 	dtFrameBegin = std::clock () - dtFrameBegin;
 	if (c%100 == 0) std::cout << "Rendering " << mDebugMeshCounter << " Mesh(es) took: " << dtFrameBegin * 1000 / CLOCKS_PER_SEC << "ms.\n";
