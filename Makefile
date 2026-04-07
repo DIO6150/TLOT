@@ -1,78 +1,52 @@
-# ========================
-#      PROJECT CONFIG
-# ========================
+﻿CXX       := g++
+CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include
+CXX_FLAGS += -O0 -g
 
-# Output
-BIN_WINDOWS	:= bin/teto.exe
-BIN_LINUX	:= bin/teto.out
+AR        := ar
+AR_FLAGS  := rcs
 
-# Folders
-ENGINE_SRC := src
-ENGINE_INC := -Iinclude
+SRC_DIR := src
+BIN_DIR := bin
+LIB_DIR := lib
 
-VENDOR_SRC := vendor
-VENDOR_INC := vendor
+EXEC_WINDOWS := $(BIN_DIR)/$(LIB_DIR)/libTetoEngine.a
+LIBS_FLAGS_WINDOWS := -lglfw3 -lgdi32 -lopengl32 -lstdc++exp
 
-# Libs
-LIBS_WINDOWS 	:= -lassimp -llua -lglfw3 -lgdi32 -lopengl32
-LIBS_LINUX 	:= -lassimp -llua -lglfw3
+EXEC_LINUX := $(BIN_DIR)/$(LIB_DIR)/tetoEngine.s
+LIBS_FLAGS_LINUX := -lglfw3
 
-# Windows vs Linux
+SRC := $(wildcard $(SRC_DIR)/*.cpp)
+SRC += deps/glad/src/glad.c
+SRC += deps/stb/stb.c
+
+OBJ := $(addprefix $(BIN_DIR)/, $(notdir $(patsubst %.cpp, %.o, $(patsubst %.c, %.o, $(SRC)))))
+
 ifeq ($(OS), Windows_NT)
-LIBDIRS	:= -Llibs/windows/glfw3 -Llibs/windows/lua -Llibs/windows/assimp
-LIBS	:= $(LIBS_WINDOWS)
-BIN	:= $(BIN_WINDOWS)
+LIB_DIRS := -Llibs/windows/glfw3
+LIBS	 := $(LIBS_FLAGS_WINDOWS)
+BIN	     := $(EXEC_WINDOWS)
+CLEAN_CMD := del /q /f $(subst /,\,$(OBJ)) $(subst /,\,$(BIN))
+
 else
-LIBDIRS	:= -Llibs/linux/glfw3 -Llibs/linux/lua -Llibs/linux/assimp
-LIBS	:= $(LIBS_LINUX)
-BIN	:= $(BIN_LINUX)
+LIB_DIRS := -Llibs/linux/glfw3
+LIBS	 := $(LIBS_FLAGS_LINUX)
+BIN 	 := $(EXEC_LINUX)
+CLEAN_CMD := rm -rf $(OBJ) $(BIN)
 endif
 
-# Compiler
-CXX      := g++
-CXXFLAGS := -std=c++23 -Wall -Wextra $(ENGINE_INC) -I$(VENDOR_INC) $(GAME_INC)
-CXXFLAGS += -O3
+all : $(BIN)
 
-# Auto-detect .cpp files
-SRC := $(wildcard $(ENGINE_SRC)/*.cpp) \
-       $(wildcard $(GAME_SRC)/*.cpp) \
-       $(wildcard $(VENDOR_SRC)/**/*.cpp) \
-       test.cpp
+$(BIN) : $(OBJ)
+	$(AR) $(AR_FLAGS) $(BIN) $(OBJ)
 
-# Glad
-CXXFLAGS += -Ivendor/glad/include
-SRC += vendor/glad/src/glad.c
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-# Stb
-SRC += vendor/stb/stb.c
+$(BIN_DIR)/%.o: deps/glad/src/%.c
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
-OBJ := $(SRC:.cpp=.o)
-OBJ := $(OBJ:.c=.o)
-
-
-# ========================
-#        BUILD RULES
-# ========================
-
-all: $(BIN)
-
-$(BIN): $(OBJ)
-	$(CXX) $(OBJ) $(LIBDIRS) $(LIBS) -o $(BIN)
-
-# Generic compilation rule
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-%.o: %.c
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(BIN_DIR)/%.o: deps/stb/%.c
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 clean:
-ifeq ($(OS), Windows_NT)
-# kindof broken but fuck cmd.exe
-	del /q /s src\*.o *.o  bin\teto.exe
-else
-	rm -rf $(OBJ) $(BIN)
-endif
-	
-
-.PHONY: all clean
+	$(CLEAN_CMD)

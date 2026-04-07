@@ -6,11 +6,13 @@
 
 #include <glad/glad.h>
 
-#include <engine/data/Shader.hpp>
+#include <resources/Shader.hpp>
+#include <core/Utils.hpp>
+#include <core/Logger.hpp>
 
-#include <engine/utils/Utils.hpp>
+#include <glm/glm.hpp>
 
-using namespace Engine::Data;
+using namespace TLOT;
 
 static bool CreateVertex (std::string path, unsigned int *object) {
 	int status;
@@ -151,6 +153,8 @@ void Shader::upload1i (std::string key, int i) const {
     int location;
 
     location = glGetUniformLocation (m_program, key.c_str ());
+
+	//Logger::log (LogLevel::Info, "location={}", location);
     glUniform1i (location, i);
 }
 
