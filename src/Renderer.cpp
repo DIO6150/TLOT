@@ -213,8 +213,7 @@ void Renderer::SyncGPU ()
 		size_t offset = 0;
 		for (auto const & textureOffset : collection.textures)
 		{
-			m_ssboTextureOffset.Push (textureOffset, collection.index + offset);
-			++offset;
+			m_ssboTextureOffset.Push (textureOffset, collection.index + offset++);
 		}
 	}
 
@@ -244,4 +243,9 @@ void Renderer::SyncGPU ()
 	m_texturesOffsetToSend.clear ();
 	m_materialToUpdate    .clear ();
 	m_transformToUpdate   .clear ();
+}
+
+Renderer::~Renderer ()
+{
+	
 }

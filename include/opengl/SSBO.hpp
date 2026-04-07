@@ -37,7 +37,7 @@ namespace TLOT
 		{
 			glBindBufferBase (GL_SHADER_STORAGE_BUFFER, m_binding, m_object);
 
-			Logger::log (LogLevel::Info, "Pushing Data sizeof={} at offset={} (total={})", sizeof (Data), offset, sizeof (Data) * offset);
+			Logger::log (LogLevel::Info, "Pushing Data sizeof={} at offset={} (total={}) at binding={}", sizeof (Data), offset, sizeof (Data) * offset, m_binding);
 
 			glNamedBufferSubData
 			(

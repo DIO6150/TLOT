@@ -49,6 +49,8 @@ namespace TLOT
 
 		void Render (Shader const & shader, Camera const & camera);
 
+		~Renderer ();
+
 	private:
 		void SyncGPU ();
 
@@ -76,8 +78,6 @@ namespace TLOT
 			glm::mat4 model;
 			InstanceMaterial mat;
 		};
-
-		size_t s = sizeof (Instance);
 
 		InstanceMaterial CreateInstanceMaterial (Material const & material, AssetManager & assetManager);
 

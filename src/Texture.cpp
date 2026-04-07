@@ -6,6 +6,8 @@
 
 #include <core/Logger.hpp>
 
+#include <stdio.h>
+
 using namespace TLOT;
 
 Texture::Texture (unsigned char * data, size_t width, size_t height) :
@@ -18,6 +20,8 @@ Texture::Texture (unsigned char * data, size_t width, size_t height) :
 
 Texture::~Texture ()
 {
+	printf ("(%p)\n", data);
+	*data;
 	free (data);
 }
 
