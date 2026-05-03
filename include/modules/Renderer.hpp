@@ -32,10 +32,16 @@
 
 namespace TLOT
 {
+	enum class ProjectionMode
+	{
+		Perspective,
+		Orthogonal
+	};
+
 	class Renderer
 	{
 	public:
-		Renderer ();
+		Renderer (size_t windowWidth, size_t windowHeight, ProjectionMode mode);
 
 		GeometryID RegisterGeometry (Mesh const & mesh);
 		InstanceID RegisterInstance (GeometryID id, Transform const transform, Material const material, AssetManager & assetManager);
@@ -43,11 +49,13 @@ namespace TLOT
 		void RegisterTexture (ResourceHandle handle, Texture const & texture);
 		
 		void UpdateInstanceMaterial (InstanceID id, Material const & material, AssetManager & assetManager);
-		void UpdateInstanceTransform (InstanceID id, Transform const & transform);
+		void UpdateInstanceTransform (InstanceID id, Transform transform);
 
 		void UnregisterInstance (InstanceID id);
 
 		void Render (Shader const & shader, Camera const & camera);
+
+		glm::mat4 GetProjection () { return m_projection; }
 
 		~Renderer ();
 
@@ -81,6 +89,8 @@ namespace TLOT
 
 		InstanceMaterial CreateInstanceMaterial (Material const & material, AssetManager & assetManager);
 
+		ProjectionMode m_mode;
+
 		GeometryID m_nextGeometryID = 0;
 		InstanceID m_nextInstanceID = 0;
 
@@ -106,7 +116,7 @@ namespace TLOT
 
 		TextureAtlas m_atlas;
 
-		glm::mat4 m_projection = glm::perspective (glm::radians (45.0f), 1.0f, 0.1f, 100.0f);
+		glm::mat4 m_projection;
 
 		
 		constexpr static const size_t s_initialVertexCount    = 1000000;
@@ -120,6 +130,8 @@ namespace TLOT
 		SSBO<uint32_t>      m_ssboInstanceIndex = {s_initialInstanceCount, GL_DYNAMIC_DRAW, 0};
 		SSBO<Instance>      m_ssboInstanceData  = {s_initialInstanceCount, GL_DYNAMIC_DRAW, 1};
 		SSBO<TextureOffset> m_ssboTextureOffset = {s_initialInstanceCount, GL_DYNAMIC_DRAW, 2};
+
+		bool m_shouldSkipSync = false;
 		
 	};
 }

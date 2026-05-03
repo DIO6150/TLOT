@@ -8,7 +8,6 @@ using namespace TLOT;
 
 AssetManager::AssetManager ()
 {
-	// setup default quad
 	{
 		std::vector<Vertex> const quadVertices = {
 			{-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f},
@@ -22,30 +21,61 @@ AssetManager::AssetManager ()
 		
 		std::vector<uint32_t> const quadIndices = {0, 1, 2, 3, 4, 5};
 
-		m_quadMeshID = m_meshes.PushResource ("__TLOT_QUAD", quadVertices, quadIndices, Material {}, m_nextMeshID++);
+		m_quadMeshID = m_meshes.PushResource ("__TLOT_QUAD_MESH", quadVertices, quadIndices, Material {}, m_nextMeshID++);
+	}
+
+	{
+		unsigned char *textureData = new unsigned char[4];
+		textureData[0] = 255;
+		textureData[1] = 255;
+		textureData[2] = 255;
+		textureData[3] = 255;
+		m_textures.CreateDefault (textureData, 1, 1);
+	}
+
+	{
+		unsigned char * textureData = new unsigned char[16];
+		textureData[0]  = 0;
+		textureData[1]  = 0;
+		textureData[2]  = 0;
+		textureData[3]  = 255;
+
+		textureData[4]  = 255;
+		textureData[5]  = 0;
+		textureData[6]  = 0;
+		textureData[7]  = 255;
+
+		textureData[8]  = 0;
+		textureData[9]  = 0;
+		textureData[10] = 0;
+		textureData[11] = 255;
+
+		textureData[12] = 255;
+		textureData[13] = 0;
+		textureData[14] = 0;
+		textureData[15] = 255;
+
+		m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 1, 1);
 	}
 }
 
 ResourceHandle AssetManager::LoadTexture (std::string key, fs::path path)
 {
-	
-
 	if (m_textures.KeyExists (key))
 	{
-		return m_textures.GetValue (key);
+		return m_shaders.GetHandleFromKey (key);
 	}
 	
 	unsigned char * data;
 	size_t width, height;
-	if (load_texture (path, data, width, height))
+
+	if (!load_texture (path, data, width, height))
 	{
-		ResourceHandle handle = m_textures.PushResource (key, data, width, height);
-
-		return handle;
+		Logger::log (LogLevel::Error, "Could not load or create texture key={} path={}.", key, path.string ());
+		return m_missingTextureID;
 	}
-
-	Logger::log (LogLevel::Error, "Could not create texture : {}.", path.string ());
-	return InvalidResource;
+	
+	return m_textures.PushResource (key, data, width, height);
 }
 
 ResourceHandle AssetManager::LoadMesh (std::string key, fs::path path)
@@ -62,7 +92,7 @@ ResourceHandle AssetManager::LoadShader (std::string key, fs::path vertexPath, f
 
 	if (m_shaders.KeyExists (key))
 	{
-		return m_shaders.GetValue (key);
+		return m_shaders.GetHandleFromKey (key);
 	}
 
 	ResourceHandle handle = m_shaders.PushResource (key, vertexPath.string (), fragmentPath.string ());
@@ -87,6 +117,11 @@ Mesh & AssetManager::GetMesh (ResourceHandle handle)
 Shader & AssetManager::GetShader (ResourceHandle handle)
 {
 	return m_shaders.GetResource (handle);
+}
+
+ResourceHandle AssetManager::GetTextureID (std::string key)
+{
+	return m_textures.GetHandleFromKey (key);
 }
 
 ResourceHandle AssetManager::GetQuadMeshID ()

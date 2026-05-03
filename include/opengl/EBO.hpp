@@ -30,12 +30,6 @@ namespace TLOT
         // TODO-fix: index and size checking + resizing
 		void Push (std::vector<uint32_t> const & indices, size_t offset)
 		{
-			Logger::log (LogLevel::Info, "Trying to send indices count={}, offset={}", indices.size (), offset);
-			for (auto const & index : indices)
-			{	
-				std::cout << index << "\n";
-			}
-
 			glNamedBufferSubData (m_object, offset * sizeof (uint32_t), indices.size () * sizeof (uint32_t), (void *) indices.data ());
 		}
         

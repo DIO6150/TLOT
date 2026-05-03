@@ -20,8 +20,6 @@ Texture::Texture (unsigned char * data, size_t width, size_t height) :
 
 Texture::~Texture ()
 {
-	printf ("(%p)\n", data);
-	*data;
 	free (data);
 }
 

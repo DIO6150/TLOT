@@ -22,6 +22,6 @@ namespace TLOT
 		std::vector<uint32_t> indices;
 		Material material;
 		
-		ID identifier;
+		ID identifier = 0;
 	};
 }

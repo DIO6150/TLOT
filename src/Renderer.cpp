@@ -4,10 +4,24 @@
 
 #include <core/Utils.hpp>
 
+#include <chrono>
+
+using namespace std::chrono;
+
 using namespace TLOT;
 
-Renderer::Renderer ()
+Renderer::Renderer (size_t windowWidth, size_t windowHeight, ProjectionMode mode):
+	m_mode {mode}
 {
+	if (mode == ProjectionMode::Perspective)
+	{
+		m_projection = glm::perspective (glm::radians (45.0f), (float)windowWidth / windowHeight, 0.1f, 100.0f);
+	}
+	else if (mode == ProjectionMode::Orthogonal)
+	{
+		m_projection = glm::ortho(0.0f, (float)windowWidth, 0.0f, (float)windowHeight, -1.0f, 1.0f);
+	}
+
 	m_vao .Bind ();
 	m_vbo .Create ();
 	m_ebo .Create ();
@@ -22,25 +36,28 @@ GeometryID Renderer::RegisterGeometry (Mesh const & mesh)
 {
 	if (m_registeredGeometry.find (mesh.identifier) != m_registeredGeometry.end ())
 	{
-		Logger::log (LogLevel::Warning, "Trying to re-register geometry.");
 		return m_registeredGeometry[mesh.identifier];
 	}
 
-	GeometryID const id = m_nextGeometryID++;
+	GeometryID const geometry = m_nextGeometryID++;
 
-	m_geometryIndexBuffer.Insert (id, mesh.vertices.size (), mesh.indices.size ());
-	m_geometryToSend.push_back ({id , Geometry {mesh.vertices, mesh.indices}});
+	m_geometryIndexBuffer.Insert (geometry, mesh.vertices.size (), mesh.indices.size ());
+	m_geometryToSend.push_back ({geometry , Geometry {mesh.vertices, mesh.indices}});
 
-	m_registeredGeometry.emplace (mesh.identifier, id);
+	m_registeredGeometry.emplace (mesh.identifier, geometry);
 
 	size_t indexCount = mesh.indices.size ();
 
-	size_t indexOffset  = m_geometryIndexBuffer.GetIndexOffset  (id);
-	size_t vertexOffset = m_geometryIndexBuffer.GetVertexOffset (id);
+	size_t indexOffset  = m_geometryIndexBuffer.GetIndexOffset  (geometry);
+	size_t vertexOffset = m_geometryIndexBuffer.GetVertexOffset (geometry);
 
-	m_drawCommandBuffer.RegisterCommand (id, indexCount, vertexOffset, indexOffset);
+	m_drawCommandBuffer.RegisterCommand (geometry, indexCount, vertexOffset, indexOffset);
 
-	return id;
+	m_shouldSkipSync = false;
+
+	Logger::log (LogLevel::Info, "Created geometry with id= {}", geometry);
+
+	return geometry;
 }
 
 InstanceID Renderer::RegisterInstance (GeometryID geometry, Transform const transform, Material const material, AssetManager & assetManager)
@@ -54,7 +71,7 @@ InstanceID Renderer::RegisterInstance (GeometryID geometry, Transform const tran
 	InstanceID const instance = m_nextInstanceID++;
 
 	m_registerdInstances.emplace (instance);
-	size_t offset = m_instanceOffsetBuffer.Insert (geometry);
+	size_t offset = m_instanceOffsetBuffer.Insert (instance);
 	m_instanceIndexBuffer.Insert (geometry, offset);
 
 	m_instanceToSend.emplace_back
@@ -79,7 +96,9 @@ InstanceID Renderer::RegisterInstance (GeometryID geometry, Transform const tran
 
 	m_drawCommandBuffer.AddInstance (geometry);
 
-	return geometry;
+	m_shouldSkipSync = false;
+
+	return instance;
 }
 
 void Renderer::RegisterTexture (ResourceHandle handle, Texture const & texture)
@@ -92,13 +111,17 @@ void Renderer::UpdateInstanceMaterial (InstanceID id, Material const & material,
 	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id) * sizeof (Instance);
 
 	m_materialToUpdate.push_back ({base_offset + sizeof (glm::mat4), CreateInstanceMaterial (material, assetManager)});
+
+	m_shouldSkipSync = false;
 }
 
-void Renderer::UpdateInstanceTransform (InstanceID id, Transform const & transform)
+void Renderer::UpdateInstanceTransform (InstanceID id, Transform transform)
 {
-	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id) * sizeof (Instance);
+	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id);
 
 	m_transformToUpdate.push_back ({base_offset, transform.GetModelMatrix ()});
+
+	m_shouldSkipSync = false;
 }
 
 void Renderer::UnregisterInstance (InstanceID id)
@@ -118,6 +141,10 @@ void Renderer::UnregisterInstance (InstanceID id)
 	m_instanceIndexBuffer.Remove (geometry, offset);
 
 	m_drawCommandBuffer.RemoveInstance (geometry);
+
+	//TODO: maybe remove TextureOffsets ? idk
+
+	m_shouldSkipSync = false;
 }
 
 void Renderer::Render (Shader const & shader, Camera const & camera)
@@ -145,7 +172,7 @@ void Renderer::Render (Shader const & shader, Camera const & camera)
 	shader.use ();
 	shader.upload1i ("uAtlas", 0);
 	shader.uploadMatrix4 ("uProjection", m_projection);
-	shader.uploadMatrix4 ("uView", camera.getView ());
+	if (m_mode == ProjectionMode::Perspective) shader.uploadMatrix4 ("uView", camera.getView ());
 	
 	glBindTexture (GL_TEXTURE_2D_ARRAY, m_atlas.Get ());
 
@@ -189,14 +216,18 @@ Renderer::InstanceMaterial Renderer::CreateInstanceMaterial (Material const & ma
 
 void Renderer::SyncGPU ()
 {
+	if (m_shouldSkipSync) return;
+
 	m_atlas.Generate ();
+
+	// one way to optimize this is to merge all consecutive data beforehand and send that instead of every little things
 
 	for (auto const & [handle, geometry] : m_geometryToSend)
 	{
 		size_t vertexOffset = m_geometryIndexBuffer.GetVertexOffset (handle);
 		size_t indexOffset  = m_geometryIndexBuffer.GetIndexOffset  (handle);
 
-		Logger::log (LogLevel::Info, "(VBO) Sending Geometry Data (size={}) to gpu at offset={}.", geometry.vertices.size (), vertexOffset);
+		//Logger::log (LogLevel::Info, "(VBO) Sending Geometry Data (size={}) to gpu at offset={}.", geometry.vertices.size (), vertexOffset);
 
 		m_vbo.Push (geometry.vertices, vertexOffset);
 		m_ebo.Push (geometry.indices , indexOffset);
@@ -204,7 +235,6 @@ void Renderer::SyncGPU ()
 
 	for (auto const & [index, instance] : m_instanceToSend)
 	{
-		printMat4 (instance.model);
 		m_ssboInstanceData.Push (instance, index);
 	}
 
@@ -220,7 +250,7 @@ void Renderer::SyncGPU ()
 	for (auto const & [index, offset] : m_instanceIndexBuffer.Pull ())
 	{
 
-		Logger::log (LogLevel::Info, "Trying to push instance offset={} at index={}", offset, index);
+		//Logger::log (LogLevel::Info, "Trying to push instance offset={} at index={}", offset, index);
 		m_ssboInstanceIndex.Push (offset, index);
 	}
 
@@ -232,8 +262,7 @@ void Renderer::SyncGPU ()
 	
 	for (auto const & [index, transform] : m_transformToUpdate)
 	{
-		Logger::log (LogLevel::Info, "(Transform Update) (disabled)");
-		//m_ssboInstanceData.Push (transform, index);
+		m_ssboInstanceData.PushPart (transform, index, 0);
 	}
 
 	m_dibo.ReplaceAll (m_drawCommandBuffer.Pull ());
@@ -243,6 +272,8 @@ void Renderer::SyncGPU ()
 	m_texturesOffsetToSend.clear ();
 	m_materialToUpdate    .clear ();
 	m_transformToUpdate   .clear ();
+
+	m_shouldSkipSync = true;
 }
 
 Renderer::~Renderer ()

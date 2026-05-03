@@ -52,7 +52,7 @@ inline bool load_texture (std::filesystem::path path, unsigned char *& data, siz
 
 	if (!data)
 	{
-		printf ("%s(%s) : (%s) %s\n", __func__, __FILE__, path.string ().c_str (), stbi_failure_reason ());
+		//printf ("%s(%s) : (%s) %s\n", __func__, __FILE__, path.string ().c_str (), stbi_failure_reason ());
 		return (false);
 	}
 
@@ -78,4 +78,27 @@ inline void printMat4(glm::mat4 m, const std::string& name = "Matrix") {
 inline std::ostream & operator<<(std::ostream& out, const glm::vec3 & v) {
 	out << "{" << v.x << ", " << v.y << ", " << v.z << "}";
 	return out;
+}
+
+inline float GetDistanceSquared (glm::vec3 posA, glm::vec3 posB)
+{
+	auto diff = posB - posA;
+	return glm::dot (diff, diff);
+}
+
+inline glm::vec3 ScreenToWorld(glm::vec2 screenPos, glm::vec2 windowSize, glm::mat4 view, glm::mat4 projection, float depth = 0.5f) {
+    
+	float x = (2.0f * screenPos.x) / windowSize.x - 1.0f;
+	float y = 1.0f - (2.0f * screenPos.y) / windowSize.y;
+
+
+	glm::vec4 rayClip {x, y, depth, 1.0f};
+	glm::mat4 invVP = glm::inverse (projection * view);
+	glm::vec4 worldPos = invVP * rayClip;
+
+	if (worldPos.w != 0.0f) {
+		worldPos /= worldPos.w;
+	}
+
+	return glm::vec3 {worldPos};
 }

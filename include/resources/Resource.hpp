@@ -31,4 +31,36 @@ namespace TLOT
 
 		return hash;
 	}
+
+	template<typename Resource>
+	class ResourceContainer
+	{
+	public:
+		
+	ResourceContainer (Resource const & resource, ResourceHandle handle):
+		m_handle {handle},
+		m_data {resource}
+	{
+		
+	}
+
+	Resource & Get ()
+	{
+		return m_data;
+	}
+
+	Resource GetCopy ()
+	{
+		return m_data;
+	}
+
+	ResourceHandle GetHandle ()
+	{
+		return m_handle;
+	}
+
+	private:
+		ResourceHandle m_handle;
+		Resource m_data;
+	};
 }

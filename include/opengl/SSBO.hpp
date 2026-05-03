@@ -33,17 +33,31 @@ namespace TLOT
 			glNamedBufferData (m_object, m_elementCount * sizeof (Data), NULL, m_usage);
 		}
 
-		void Push(Data const & data, size_t offset)
+		void Push(Data const & data, size_t index)
 		{
 			glBindBufferBase (GL_SHADER_STORAGE_BUFFER, m_binding, m_object);
 
-			Logger::log (LogLevel::Info, "Pushing Data sizeof={} at offset={} (total={}) at binding={}", sizeof (Data), offset, sizeof (Data) * offset, m_binding);
+			//Logger::log (LogLevel::Info, "Pushing Data sizeof={} at index={} (total={}) at binding={}", sizeof (Data), index, sizeof (Data) * index, m_binding);
 
 			glNamedBufferSubData
 			(
 				m_object,
-				sizeof (Data) * offset,
+				sizeof (Data) * index,
 				sizeof (Data),
+				(void*) &data
+			);
+		}
+
+		template<class DataPart>
+		void PushPart (DataPart const & data, size_t index, size_t byteOffset)
+		{
+			assert (sizeof (DataPart) <= sizeof (Data));
+			
+			glNamedBufferSubData
+			(
+				m_object,
+				sizeof (Data) * index + byteOffset,
+				sizeof (DataPart),
 				(void*) &data
 			);
 		}

@@ -33,6 +33,7 @@ namespace TLOT
         
 		void ReplaceAll (std::vector<DrawCommand> & commands)
 		{
+			if (commands.empty ()) return;
             glNamedBufferSubData (m_object, 0, sizeof (DrawCommand) * commands.size (), (void *) commands.data ());
 		}
         

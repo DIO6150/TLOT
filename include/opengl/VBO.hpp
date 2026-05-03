@@ -80,12 +80,6 @@ namespace TLOT {
 		// TODO-fix: index and size checking + resizing
 		void Push (std::vector<Vertex> const vertices, size_t offset)
 		{
-			Logger::log (LogLevel::Info, "Trying to send vertices count={}, offset={}", vertices.size (), offset);
-			for (auto const & vertex : vertices)
-			{	
-				std::cout << vertex << "\n";
-			}
-
 			glNamedBufferSubData (m_object, offset * sizeof (Vertex), vertices.size () * sizeof (Vertex), (void *) vertices.data ());
 		}
 		

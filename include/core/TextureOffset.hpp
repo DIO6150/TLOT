@@ -20,8 +20,6 @@ namespace TLOT
 			y = textureQuad.y / atlas.Height ();
 			h = textureQuad.h / atlas.Height ();
 			d = static_cast<float> (textureQuad.depth);
-
-			Logger::log (LogLevel::Info, "{} : Offset = ({}, {}, {}, {}, {})", handle, x, y, w, h, d);
 		}
 	};
 }
