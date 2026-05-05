@@ -13,7 +13,7 @@ inline void GLAPIENTRY openglDebugCallback(
 	const GLchar* message,
 	__attribute__((unused)) const void* userParam) {
 	//if (type != GL_DEBUG_TYPE_ERROR) return;
-
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 	std::cerr << "=== OpenGL Debug Message ===\n";
 	std::cerr << "Message: " << message << "\n";
 

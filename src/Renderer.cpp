@@ -85,13 +85,6 @@ InstanceID Renderer::RegisterInstance (GeometryID geometry, Transform const tran
 		)
 	);
 
-	// not strictly necessary
-	for (auto const & textureHandle : material.diffuseTextures)
-	{
-		Texture const & texture = assetManager.GetTexture (textureHandle);
-		m_atlas.Feed (textureHandle, texture);
-	}
-
 	m_instanceToGeometry[instance] = geometry;
 
 	m_drawCommandBuffer.AddInstance (geometry);
@@ -103,6 +96,7 @@ InstanceID Renderer::RegisterInstance (GeometryID geometry, Transform const tran
 
 void Renderer::RegisterTexture (ResourceHandle handle, Texture const & texture)
 {
+	if (handle == 0) Logger::log (LogLevel::Warning, "defaultTexture from RegisterTexture");
 	m_atlas.Feed (handle, texture);
 }
 
@@ -110,7 +104,7 @@ void Renderer::UpdateInstanceMaterial (InstanceID id, Material const & material,
 {
 	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id) * sizeof (Instance);
 
-	m_materialToUpdate.push_back ({base_offset + sizeof (glm::mat4), CreateInstanceMaterial (material, assetManager)});
+	m_materialToUpdate.push_back ({base_offset, CreateInstanceMaterial (material, assetManager)});
 
 	m_shouldSkipSync = false;
 }
@@ -154,7 +148,6 @@ void Renderer::Render (Shader const & shader, Camera const & camera)
 	//TODO: restore frame buffers functionnalities
 	//glBindFramebuffer (GL_FRAMEBUFFER, m_sceneFrameBuffer.Get ());
 	glEnable (GL_DEPTH_TEST);
-	glClear  (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	m_vao.Bind  ();
 	m_vbo.Bind  ();
@@ -189,6 +182,11 @@ Renderer::InstanceMaterial Renderer::CreateInstanceMaterial (Material const & ma
 	uint32_t diffuseTextureCount = material.diffuseTextures.size ();
 
 	Hash texturesHash = m_textureIndexBuffer.GetHash (material.diffuseTextures);
+
+	if (!texturesHash)
+	{
+		Logger::log (LogLevel::Error, "Hash is null, texture offset is incorrect");
+	}
 
 	InstanceMaterial value;
 	value.color = material.color;
@@ -256,8 +254,8 @@ void Renderer::SyncGPU ()
 
 	for (auto const & [index, material] : m_materialToUpdate)
 	{
-		Logger::log (LogLevel::Info, "(Material Update) (disabled)");
-		//m_ssboInstanceData.Push (material, index);
+		//Logger::log (LogLevel::Info, "(Material Update) (disabled)");
+		m_ssboInstanceData.PushPart (material, index, sizeof (glm::mat4));
 	}
 	
 	for (auto const & [index, transform] : m_transformToUpdate)

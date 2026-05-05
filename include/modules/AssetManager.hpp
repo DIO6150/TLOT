@@ -88,6 +88,7 @@ namespace TLOT
 				if (m_resources.find (handle) == m_resources.end ())
 				{
 					assert (m_defaultResource != InvalidResource);
+					Logger::log (LogLevel::Warning, "ResourceHandle ({}) doesn't exists", handle);
 					return *m_resources.at (m_defaultResource).get ();
 				}
 

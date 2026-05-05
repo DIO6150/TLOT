@@ -16,6 +16,8 @@ namespace TLOT
 	public:
 		uint32_t GetIndex (std::vector<ResourceHandle> textures)
 		{
+			if (textures.empty ()) return 0;
+
 			Hash hash = GenerateOrderedSetHash (textures);
 
 			if (m_texturesIndices.find (hash) != m_texturesIndices.end ())
