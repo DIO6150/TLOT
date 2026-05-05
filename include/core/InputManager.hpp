@@ -23,6 +23,8 @@ public:
 	bool isKeyReleased(int key) const;
 	
 	bool isMouseButtonDown(int button) const;
+	bool isMouseButtonPressed(int button) const;
+	bool isMouseButtonReleased(int button) const;
 	void getMousePos(double& x, double& y) const;
 
 private:
@@ -33,6 +35,7 @@ private:
 	bool m_keysLast[GLFW_KEY_LAST];
 
 	bool m_mouseButtons[GLFW_MOUSE_BUTTON_LAST];
+	bool m_mouseButtonsLast[GLFW_MOUSE_BUTTON_LAST];
 	double m_mouseX, m_mouseY;
 
 	static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

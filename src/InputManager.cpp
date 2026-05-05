@@ -33,9 +33,16 @@ void InputManager::cursorPosCallback(GLFWwindow* window, double xpos, double ypo
 }
 
 void InputManager::update() {
-    for (int i = 0; i < GLFW_KEY_LAST; ++i) {
+    for (int i = 0; i < GLFW_KEY_LAST; ++i)
+	{
         m_keysLast[i] = m_keys[i];
     }
+
+	for (int i = 0; i < GLFW_MOUSE_BUTTON_LAST; ++i)
+	{
+		m_mouseButtonsLast[i] = m_mouseButtons[i];
+	}
+
     glfwPollEvents();
 }
 
@@ -55,6 +62,18 @@ bool InputManager::isMouseButtonDown(int button) const
 {
 	return m_mouseButtons[button];
 }
+
+
+bool InputManager::isMouseButtonPressed(int button) const
+{
+	return m_mouseButtons[button] && !m_mouseButtonsLast[button];
+}
+
+bool InputManager::isMouseButtonReleased(int button) const
+{
+	return !m_mouseButtons[button] && m_mouseButtonsLast[button];
+}
+
 
 void InputManager::getMousePos(double& x, double& y) const {
     x = m_mouseX;

@@ -14,7 +14,6 @@ namespace TLOT
 		glm::quat rotation =  {1.0, 0.0, 0.0, 0.0};
 		glm::vec3 pivot    =  {0.0, 0.0, 0.0};
 		glm::vec3 scale    =  {1.0, 1.0, 1.0};
-		glm::vec3 absolutePosition = {0.0, 0.0, 0.0};
 
 		glm::mat4 GetModelMatrix() const
 		{
@@ -22,7 +21,6 @@ namespace TLOT
 			model = model * glm::mat4_cast (rotation);
 			model = glm::translate (model, -pivot * scale);
 			model = glm::scale (model, scale);
-			model = glm::translate (model, absolutePosition);
 
 			return model;
 		}
