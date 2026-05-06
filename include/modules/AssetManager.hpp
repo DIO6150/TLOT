@@ -83,6 +83,11 @@ namespace TLOT
 				return handle;
 			}
 
+			void PointToHandle (std::string origin, ResourceHandle point)
+			{
+				m_keyToResource.emplace (origin, point);
+			}
+
 			Resource & GetResource (ResourceHandle handle)
 			{
 				if (m_resources.find (handle) == m_resources.end ())

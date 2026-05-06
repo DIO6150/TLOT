@@ -45,17 +45,17 @@ AssetManager::AssetManager ()
 		textureData[6]  = 0;
 		textureData[7]  = 255;
 
-		textureData[8]  = 0;
+		textureData[8]  = 255;
 		textureData[9]  = 0;
 		textureData[10] = 0;
 		textureData[11] = 255;
 
-		textureData[12] = 255;
+		textureData[12] = 0;
 		textureData[13] = 0;
 		textureData[14] = 0;
 		textureData[15] = 255;
 
-		m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 1, 1);
+		m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 2, 2);
 	}
 }
 
@@ -72,6 +72,7 @@ ResourceHandle AssetManager::LoadTexture (std::string key, fs::path path)
 	if (!load_texture (path, data, width, height))
 	{
 		Logger::log (LogLevel::Error, "Could not load or create texture key={} path={}.", key, path.string ());
+		m_textures.PointToHandle (key, m_missingTextureID);
 		return m_missingTextureID;
 	}
 	

@@ -102,7 +102,7 @@ void Renderer::RegisterTexture (ResourceHandle handle, Texture const & texture)
 
 void Renderer::UpdateInstanceMaterial (InstanceID id, Material const & material, AssetManager & assetManager)
 {
-	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id) * sizeof (Instance);
+	size_t base_offset = m_instanceOffsetBuffer.GetOffset (id);
 
 	m_materialToUpdate.push_back ({base_offset, CreateInstanceMaterial (material, assetManager)});
 
@@ -143,6 +143,8 @@ void Renderer::UnregisterInstance (InstanceID id)
 
 void Renderer::Render (Shader const & shader, Camera const & camera)
 {
+	if (m_registerdInstances.size () == 0) return;
+
 	SyncGPU ();
 
 	//TODO: restore frame buffers functionnalities
@@ -255,6 +257,7 @@ void Renderer::SyncGPU ()
 	for (auto const & [index, material] : m_materialToUpdate)
 	{
 		//Logger::log (LogLevel::Info, "(Material Update) (disabled)");
+		Logger::log (LogLevel::Info, "Trying to update material: Textures : ({} {})", material.diffuseTextureIndex, material.diffuseTextureCount);
 		m_ssboInstanceData.PushPart (material, index, sizeof (glm::mat4));
 	}
 	

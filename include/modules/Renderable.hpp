@@ -148,8 +148,13 @@ namespace TLOT
 			
 		}
 
-		Renderable Create (GeometryID geometry, Transform transform, Material const & material)
+		Renderable Create (GeometryID geometry, Transform transform, Material material)
 		{
+			if (material.diffuseTextures.size () == 0)
+			{
+				material.diffuseTextures.push_back ((ResourceHandle)0);
+			}
+
 			InstanceID instance = m_renderer.RegisterInstance (geometry, transform, material, m_assetManager);
 
 			Renderable value;
