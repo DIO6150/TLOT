@@ -92,6 +92,21 @@ namespace TLOT
 			renderer->UpdateInstanceTransform (instance, transform);
 		}
 
+		void SetRotation (glm::vec3 eulerAngle)
+		{
+			assert (alive);
+
+			//glm::quat rotX = glm::quat {{1.0, 0.0, 0.0}, eulerAngle.x};
+			//glm::quat rotY = glm::quat {{0.0, 1.0, 0.0}, eulerAngle.y};
+			//glm::quat rotZ = glm::quat {{0.0, 0.0, 1.0}, eulerAngle.z};
+			//glm::quat finalRot = rotX * rotY * rotZ;
+
+			glm::quat finalRot = glm::quat (eulerAngle);
+			transform.rotation = finalRot;
+
+			renderer->UpdateInstanceTransform (instance, transform);
+		}
+
 		void SetScale (glm::vec3 scale)
 		{
 			assert (alive);
