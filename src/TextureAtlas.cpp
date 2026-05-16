@@ -3,13 +3,13 @@
 
 #include <glad/glad.h>
 
-#include <resources/Texture.hpp>
+#include <Core/Logger.hpp>
 
-#include <opengl/TextureAtlas.hpp>
+#include <Resources/Texture.hpp>
 
-#include <modules/AssetManager.hpp>
+#include <OpenGL/TextureAtlas/TextureAtlas.hpp>
 
-#include <core/Logger.hpp>
+#include <AssetManager.hpp>
 
 
 using namespace TLOT;
@@ -46,8 +46,6 @@ bool TextureAtlas::Feed (ResourceHandle handle, Texture const & texture) {
 	if (m_quads.find (handle) != m_quads.end ()) {
 		return false;
 	}
-
-	m_textures.emplace (handle, texture);
 
 	size_t width  = texture.width;
 	size_t height = texture.height;
@@ -130,7 +128,7 @@ void TextureAtlas::Generate () {
 	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
 	for (const auto & [textureID, quad] : m_quads) {
-		Texture const & texture = m_textures[textureID];
+		Texture const & texture = AssetManager::GetTexture (textureID);
 		
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
 			0,
@@ -192,7 +190,7 @@ void TextureAtlas::Reconstruct () {
 
 	for (auto const & textureID : textures)
 	{
-		Texture const & texture = m_textures[textureID];
+		Texture const & texture = AssetManager::GetTexture (textureID);
 		Feed (textureID, texture);
 	}
 }

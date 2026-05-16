@@ -1,4 +1,4 @@
-#include <core/InputManager.hpp>
+#include <InputManager.hpp>
 
 void InputManager::init(GLFWwindow* window) {
     m_window = window;

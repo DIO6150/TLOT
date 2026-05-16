@@ -5,10 +5,12 @@
 
 #include <core/Logger.hpp>
 
-#include <opengl/RenderContext.hpp>
-#include <opengl/Debug.hpp>
+#include <RenderContext.hpp> // always first
+#include <InputManager.hpp>
 
-#include <core/InputManager.hpp>
+#include <Debugger/DebugMessages.hpp>
+
+
 
 using namespace TLOT;
 
@@ -30,24 +32,24 @@ void RenderContext::Init (size_t w, size_t h, std::string const & title, bool fu
 
 	if (fullscreen)
 	{
-		m_window = glfwCreateWindow (w, h, title.c_str (), glfwGetPrimaryMonitor (), NULL);
+		window = glfwCreateWindow (w, h, title.c_str (), glfwGetPrimaryMonitor (), NULL);
 	}
 	else
 	{
-		m_window = glfwCreateWindow (w, h, title.c_str (), NULL, NULL);
+		window = glfwCreateWindow (w, h, title.c_str (), NULL, NULL);
 	}
-	if (!m_window) {
+	if (!window) {
 		glfwTerminate ();
 		exit (-1);
 	}
-	glfwMakeContextCurrent (m_window);
+	glfwMakeContextCurrent (window);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		Logger::panic ("Couldn't initialize GLAD.");
 		exit (-1);
 	}
 
-	glfwSetInputMode (m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode (window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// put this in renderer idk
 	glEnable (GL_DEPTH_TEST);
@@ -89,77 +91,51 @@ void RenderContext::Init (size_t w, size_t h, std::string const & title, bool fu
 	info += "OpenGL Shading Language Version: " + ShadingLanguageVersion + "\n";
 	info += "\n";
 
-	m_width = w;
-	m_height = h;
+	width = w;
+	height = h;
 
-	InputManager::getInstance ().init (m_window);
+	InputManager::getInstance ().init (window);
 
 }
 
-void RenderContext::SetUpdateLoop (Callback updateCallback)
+void RenderContext::Update ()
 {
-	m_update = updateCallback;
+	currentTime = glfwGetTime ();
+	deltaTime = currentTime - lastTime;
+
+	glfwGetCursorPos (window, &mouseX, &mouseY);
+
+	lastMouseX = mouseX;
+	lastMouseY = mouseY;
+
+	InputManager::getInstance ().update ();
+
+	lastTime       = currentTime;
 }
 
-void RenderContext::SetRenderLoop (Callback renderCallback)
+void RenderContext::Render ()
 {
-	m_render = renderCallback;
+	lastRenderTime = currentTime;
+	glfwSwapBuffers(window);
 }
 
-void RenderContext::Loop ()
+Viewport RenderContext::GetViewport () const
 {
-	while (!glfwWindowShouldClose (m_window))
-	{
-		m_currentTime = glfwGetTime ();
-		m_deltaTime = m_currentTime - m_lastTime;
-
-		glfwGetCursorPos (m_window, &m_mouseX, &m_mouseY);
-
-		Context context;
-		context.mouseX      = m_mouseX;
-		context.mouseY      = m_mouseY;
-		context.lastMouseX  = m_lastMouseX;
-		context.lastMouseY  = m_lastMouseY;
-		context.currentTime = m_currentTime;
-		context.deltaTime   = m_deltaTime;
-		context.window      = m_window;
-
-		m_update (context);
-
-		m_lastMouseX = m_mouseX;
-		m_lastMouseY = m_mouseY;
-
-		
-		if (m_currentTime - m_lastRenderTime < m_targetFrameTime) {
-			InputManager::getInstance ().update (); // <-- poll events
-			m_lastTime = m_currentTime;
-			continue;
-		}
-
-		m_render (context);
-
-		glfwSwapBuffers(m_window);
-		InputManager::getInstance ().update (); // <-- poll events
-
-		m_lastRenderTime = m_currentTime;
-		m_lastTime       = m_currentTime;
-
-	}
-}
-
-Viewport RenderContext::GetViewport ()
-{
-	return Viewport { m_width, m_height };
+	return Viewport { width, height };
 }
 
 void RenderContext::HideMouse (bool flag)
 {
 	auto mode = flag ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
-	glfwSetInputMode (m_window, GLFW_CURSOR, mode);
+	glfwSetInputMode (window, GLFW_CURSOR, mode);
 }
 
-void RenderContext::Context::HideMouse (bool flag) const
+bool RenderContext::ShouldExit () const
 {
-	auto mode = flag ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL;
-	glfwSetInputMode (window, GLFW_CURSOR, mode);
+	return glfwWindowShouldClose (window);
+}
+
+bool RenderContext::ShouldRenderFrame () const
+{
+	return currentTime - lastRenderTime >= targetFrameTime;
 }

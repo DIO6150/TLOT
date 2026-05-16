@@ -20,7 +20,31 @@ Texture::Texture (unsigned char * data, size_t width, size_t height) :
 
 Texture::~Texture ()
 {
-	free (data);
+	Logger::log (LogLevel::Info, "destructor called !");
+	if (data)
+		free (data);
+}
+
+Texture::Texture (Texture const & other):
+	width {other.width},
+	height {other.height}
+{
+	Logger::log (LogLevel::Info, "Texture copied ! Be careful !");
+	// staying consistent with stbi_load
+	data = (unsigned char *) malloc (width * height * 4);
+	// TODO : store channels
+	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
+}
+
+Texture::Texture (Texture & other):
+	width {other.width},
+	height {other.height}
+{
+	Logger::log (LogLevel::Info, "Texture copied ! Be careful !");
+	// staying consistent with stbi_load
+	data = (unsigned char *) malloc (width * height * 4);
+	// TODO : store channels
+	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
 }
 
 Texture & Texture::operator= (Texture && other)
@@ -37,23 +61,4 @@ Texture & Texture::operator= (Texture && other)
 	other.data = nullptr;
 
 	return *this;
-}
-
-Texture::Texture (Texture & other):
-	width {other.width},
-	height {other.height}
-{
-	// TODO : store channels
-	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
-}
-
-Texture::Texture (Texture const & other):
-	width {other.width},
-	height {other.height}
-{
-	Logger::log (LogLevel::Info, "Texture copied ! Be careful !");
-	// staying consistent with stbi_load
-	data = (unsigned char *) malloc (width * height * 4);
-	// TODO : store channels
-	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
 }

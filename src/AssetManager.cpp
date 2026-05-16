@@ -1,15 +1,25 @@
-#include <modules/AssetManager.hpp>
+#include <Core/Logger.hpp>
 
-#include <core/Logger.hpp>
+#include <AssetManager.hpp>
 
-#include <core/Utils.hpp>
+#include <Internal/Hash.hpp>
+#include <Internal/ReadFile.hpp>
+
+#include <Resources/Texture.hpp>
+#include <Resources/ShaderSource.hpp>
+
+#include <MeshData/Vertex.hpp>
+
+#include <stb/stb_image.h>
 
 using namespace TLOT;
+
+#define GET_SINGLETON AssetManager * instance = & GetInstance ();
 
 AssetManager::AssetManager ()
 {
 	{
-		std::vector<Vertex> const quadVertices = {
+		Vertices_t const quadVertices = {
 			{-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f},
 			{ 1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f},
 			{ 1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f},
@@ -19,113 +29,155 @@ AssetManager::AssetManager ()
 			{-1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f}  
 		};
 		
-		std::vector<uint32_t> const quadIndices = {0, 1, 2, 3, 4, 5};
+		Indices_t const quadIndices = {0, 1, 2, 3, 4, 5};
 
-		m_quadMeshID = m_meshes.PushResource ("__TLOT_QUAD_MESH", quadVertices, quadIndices, Material {}, m_nextMeshID++);
+		m_quadMesh = Mesh {quadVertices, quadIndices, Material {}, 0};
 	}
-
-	{
-		unsigned char *textureData = new unsigned char[4];
-		textureData[0] = 255;
-		textureData[1] = 255;
-		textureData[2] = 255;
-		textureData[3] = 255;
-		m_textures.CreateDefault (textureData, 1, 1);
-	}
-
-	{
-		unsigned char * textureData = new unsigned char[16];
-		textureData[0]  = 0;
-		textureData[1]  = 0;
-		textureData[2]  = 0;
-		textureData[3]  = 255;
-
-		textureData[4]  = 255;
-		textureData[5]  = 0;
-		textureData[6]  = 0;
-		textureData[7]  = 255;
-
-		textureData[8]  = 255;
-		textureData[9]  = 0;
-		textureData[10] = 0;
-		textureData[11] = 255;
-
-		textureData[12] = 0;
-		textureData[13] = 0;
-		textureData[14] = 0;
-		textureData[15] = 255;
-
-		m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 2, 2);
-	}
+//
+	//{
+	//	unsigned char *textureData = new unsigned char[4];
+	//	textureData[0] = 255;
+	//	textureData[1] = 255;
+	//	textureData[2] = 255;
+	//	textureData[3] = 255;
+	//	//m_textures.CreateDefault (textureData, 1, 1);
+	//}
+//
+	//{
+	//	unsigned char * textureData = new unsigned char[16];
+	//	textureData[0]  = 0;
+	//	textureData[1]  = 0;
+	//	textureData[2]  = 0;
+	//	textureData[3]  = 255;
+//
+	//	textureData[4]  = 255;
+	//	textureData[5]  = 0;
+	//	textureData[6]  = 0;
+	//	textureData[7]  = 255;
+//
+	//	textureData[8]  = 255;
+	//	textureData[9]  = 0;
+	//	textureData[10] = 0;
+	//	textureData[11] = 255;
+//
+	//	textureData[12] = 0;
+	//	textureData[13] = 0;
+	//	textureData[14] = 0;
+	//	textureData[15] = 255;
+//
+	//	//m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 2, 2);
+	//}
 }
 
-ResourceHandle AssetManager::LoadTexture (std::string key, fs::path path)
+Mesh const & AssetManager::GetQuadMesh ()
 {
-	if (m_textures.KeyExists (key))
-	{
-		return m_shaders.GetHandleFromKey (key);
-	}
-	
-	unsigned char * data;
-	size_t width, height;
-
-	if (!load_texture (path, data, width, height))
-	{
-		Logger::log (LogLevel::Error, "Could not load or create texture key={} path={}.", key, path.string ());
-		m_textures.PointToHandle (key, m_missingTextureID);
-		return m_missingTextureID;
-	}
-	
-	return m_textures.PushResource (key, data, width, height);
+	GET_SINGLETON
+	return instance->m_quadMesh;
 }
 
-ResourceHandle AssetManager::LoadMesh (std::string key, fs::path path)
+Texture const & AssetManager::GetTexture (ResourceHandle handle)
 {
-	Logger::log (LogLevel::Info, "Trying to load Mesh path={} key={}", path.string (), key);
-	Logger::log (LogLevel::Warning, "Loading meshes from disk is not supported at the moment.");
-	return InvalidResource;
+	GET_SINGLETON
+	return instance->m_textures.Get (handle);
 }
 
-ResourceHandle AssetManager::LoadShader (std::string key, fs::path vertexPath, fs::path fragmentPath)
+ShaderSource const & AssetManager::GetShaderSource (ResourceHandle handle)
 {
-	// TODO: We should load only the text and compile then link shaders only in the renderer
-	// since it's technichally an opengl object
+	GET_SINGLETON
+	return instance->m_shaderSources.Get (handle);
+}
 
-	if (m_shaders.KeyExists (key))
-	{
-		return m_shaders.GetHandleFromKey (key);
-	}
+ResourceHandle AssetManager::CreateShaderCollection (ResourceHandle vertex, ResourceHandle fragment)
+{
+	GET_SINGLETON
+	ResourceHandle handle = GenerateHandle ();
 
-	ResourceHandle handle = m_shaders.PushResource (key, vertexPath.string (), fragmentPath.string ());
+	instance->m_shaderCollections.emplace (handle, ProtoShader {vertex, fragment, handle});
 
 	return handle;
 }
 
-// TODO: should only returns a copy of the resoure
-// can't do it now because I need to rework some other classes that rely on having a copy instead
-// on top of my head it is mostly shaders and mesh
-
-Texture & AssetManager::GetTexture (ResourceHandle handle)
+ProtoShader AssetManager::GetShaderCollection (ID_64 hash)
 {
-	return m_textures.GetResource (handle);
+	GET_SINGLETON
+	return instance->m_shaderCollections[hash];
 }
 
-Mesh & AssetManager::GetMesh (ResourceHandle handle)
+ResourceHandle AssetManager::LoadTexture (std::string path)
 {
-	return m_meshes.GetResource (handle);
+	GET_SINGLETON
+	return instance->m_textures.Load (path);
 }
 
-Shader & AssetManager::GetShader (ResourceHandle handle)
+ResourceHandle AssetManager::LoadShaderSource (std::string path)
 {
-	return m_shaders.GetResource (handle);
+	GET_SINGLETON
+	return instance->m_shaderSources.Load (path);
 }
 
-ResourceHandle AssetManager::GetTextureID (std::string key)
+void AssetManager::Cache (std::string key, ResourceHandle handle)
 {
-	return m_textures.GetHandleFromKey (key);
+	GET_SINGLETON
+
+	instance->m_keyCache[key] = handle;
+	instance->m_keyCacheReversed[handle] = key;
+}
+ResourceHandle AssetManager::Cache (std::string key)
+{
+	GET_SINGLETON
+
+	if (instance->m_keyCache.find (key) == instance->m_keyCache.end ())
+	{
+		return InvalidResource;
+	}
+
+	return instance->m_keyCache[key];
 }
 
-ResourceHandle AssetManager::GetQuadMeshID ()
+template <>
+bool Resource<Texture>::LoadFromDisk (std::string path)
 {
-	return m_quadMeshID;
+	m_path = path;
+
+	int nb_channels;
+	int width;
+	int height;
+
+	m_resource.data = stbi_load (path.c_str (), &width, &height, &nb_channels, 4);
+
+	if (!m_resource.data)
+	{
+		Logger::log (LogLevel::Error, "Can't load texture : {} ; {}", path, stbi_failure_reason ());
+		m_resource.data = (unsigned char*)malloc (4 * sizeof (char));
+		m_resource.data[0] = 255;
+		m_resource.data[1] = 255;
+		m_resource.data[2] = 255;
+		m_resource.data[3] = 255;
+		m_resource.width = 1;
+		m_resource.height = 1;
+		return false;
+	}
+
+	m_resource.width = width;
+	m_resource.height = height;
+
+	return true;
+}
+
+template <>
+bool Resource<ShaderSource>::LoadFromDisk (std::string path)
+{
+	m_path = path;
+
+	auto bufferOpt = read_file (path);
+
+	if (!bufferOpt.has_value ())
+	{
+		Logger::log (LogLevel::Error, "Can't load shaderSource : {} ; {}", path, stbi_failure_reason ());
+		return false;
+	}
+
+	m_resource.source = bufferOpt.value ();
+
+	return true;
 }

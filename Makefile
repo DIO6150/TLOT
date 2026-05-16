@@ -1,5 +1,5 @@
 ﻿CXX       := g++
-CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include
+CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include -Ideps/imgui -Ideps/imgui/backend
 CXX_FLAGS += -O0 -g
 
 AR        := ar
@@ -18,6 +18,9 @@ LIBS_FLAGS_LINUX := -lglfw3
 SRC := $(wildcard $(SRC_DIR)/*.cpp)
 SRC += deps/glad/src/glad.c
 SRC += deps/stb/stb.c
+SRC += $(wildcard deps/imgui/*.cpp)
+SRC += deps/imgui/backends/imgui_impl_glfw.cpp
+SRC += deps/imgui/backends/imgui_impl_opengl3.cpp
 
 OBJ := $(addprefix $(BIN_DIR)/, $(notdir $(patsubst %.cpp, %.o, $(patsubst %.c, %.o, $(SRC)))))
 
@@ -40,6 +43,12 @@ $(BIN) : $(OBJ)
 	$(AR) $(AR_FLAGS) $(BIN) $(OBJ)
 
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(BIN_DIR)/%.o: deps/imgui/%.cpp
+	$(CXX) $(CXX_FLAGS) -c $< -o $@
+
+$(BIN_DIR)/%.o: deps/imgui/backends/%.cpp
 	$(CXX) $(CXX_FLAGS) -c $< -o $@
 
 $(BIN_DIR)/%.o: deps/glad/src/%.c

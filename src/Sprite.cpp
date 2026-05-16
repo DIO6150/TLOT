@@ -1,14 +1,7 @@
-#include <modules/Sprite.hpp>
+#include <Renderer/Renderables/Sprite.hpp>
 
 using namespace TLOT;
 
-void SpriteAnimation::Step ()
-{
-	if (currentTexture == textures.size ())
-		currentTexture = 0;
-
-	currentTexture++;
-}
 
 void Sprite::Update (double deltaTime)
 {
@@ -17,7 +10,7 @@ void Sprite::Update (double deltaTime)
 
 	if (nextFrame > 0.0) return;
 
-	SetDiffuseTexture (0, current.GetCurrentTexture (), m_assetManager);
+	SetDiffuseTexture (0, current.GetCurrentTexture ());
 
 	current.Step ();
 	nextFrame = 1.0;
@@ -26,7 +19,7 @@ void Sprite::Update (double deltaTime)
 void Sprite::ForceUpdate ()
 {
 	SpriteAnimation & current = m_animations[m_currentAnimation];
-	SetDiffuseTexture (0, current.GetCurrentTexture (), m_assetManager);
+	SetDiffuseTexture (0, current.GetCurrentTexture ());
 }
 
 void Sprite::RegisterAnimation (std::string animationName, SpriteAnimation & animation)
