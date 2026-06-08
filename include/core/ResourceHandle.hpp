@@ -4,8 +4,8 @@
 
 namespace TLOT
 {
-	using ResourceHandle = ID_64;
-	static ResourceHandle const InvalidResource = InvalidID_64;
+	using ResourceHandle = ID64_t;
+	static ResourceHandle const InvalidResource = InvalidID64_t;
 
 	inline ResourceHandle GenerateHandle ()
 	{

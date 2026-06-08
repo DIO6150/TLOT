@@ -10,9 +10,13 @@ namespace TLOT
 		float y = 0.0f;
 		float w = 0.0f;
 		float h = 0.0f;
-		uint32_t depth = 0;
+		float depth = 0;
 
-		TextureQuad (float x, float y, float w, float h, int depth);
+		TextureQuad (float x, float y, float w, float h, float depth):
+			x{x}, y{y}, w{w}, h{h}, depth{depth}
+		{
+
+		}
 		TextureQuad () = default;
 		
 		bool operator== (TextureQuad & other);

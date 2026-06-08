@@ -1,16 +1,14 @@
-#include <Core/Logger.hpp>
+#include <stb/stb_image.h>
 
 #include <AssetManager.hpp>
-
+#include <Material/MaterialInstance.hpp>
+#include <Core/Logger.hpp>
 #include <Internal/Hash.hpp>
 #include <Internal/ReadFile.hpp>
-
 #include <Resources/Texture.hpp>
 #include <Resources/ShaderSource.hpp>
+#include <Geometry.hpp>
 
-#include <MeshData/Vertex.hpp>
-
-#include <stb/stb_image.h>
 
 using namespace TLOT;
 
@@ -18,111 +16,83 @@ using namespace TLOT;
 
 AssetManager::AssetManager ()
 {
-	{
-		Vertices_t const quadVertices = {
-			{-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f},
-			{ 1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f},
-			{ 1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f},
-			
-			{-1.0f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 0.0f},
-			{ 1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f},
-			{-1.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, 1.0f}  
-		};
-		
-		Indices_t const quadIndices = {0, 1, 2, 3, 4, 5};
 
-		m_quadMesh = Mesh {quadVertices, quadIndices, Material {}, 0};
-	}
-//
-	//{
-	//	unsigned char *textureData = new unsigned char[4];
-	//	textureData[0] = 255;
-	//	textureData[1] = 255;
-	//	textureData[2] = 255;
-	//	textureData[3] = 255;
-	//	//m_textures.CreateDefault (textureData, 1, 1);
-	//}
-//
-	//{
-	//	unsigned char * textureData = new unsigned char[16];
-	//	textureData[0]  = 0;
-	//	textureData[1]  = 0;
-	//	textureData[2]  = 0;
-	//	textureData[3]  = 255;
-//
-	//	textureData[4]  = 255;
-	//	textureData[5]  = 0;
-	//	textureData[6]  = 0;
-	//	textureData[7]  = 255;
-//
-	//	textureData[8]  = 255;
-	//	textureData[9]  = 0;
-	//	textureData[10] = 0;
-	//	textureData[11] = 255;
-//
-	//	textureData[12] = 0;
-	//	textureData[13] = 0;
-	//	textureData[14] = 0;
-	//	textureData[15] = 255;
-//
-	//	//m_missingTextureID = m_textures.PushResource ("__TLOT_MISSING_TEXTURE", textureData, 2, 2);
-	//}
 }
 
-Mesh const & AssetManager::GetQuadMesh ()
-{
-	GET_SINGLETON
-	return instance->m_quadMesh;
-}
-
-Texture const & AssetManager::GetTexture (ResourceHandle handle)
+ResourceView<Texture> AssetManager::GetTexture(ResourceHandle handle)
 {
 	GET_SINGLETON
 	return instance->m_textures.Get (handle);
 }
 
-ShaderSource const & AssetManager::GetShaderSource (ResourceHandle handle)
+ResourceView<ShaderSource> AssetManager::GetShaderSource(ResourceHandle handle)
 {
 	GET_SINGLETON
 	return instance->m_shaderSources.Get (handle);
 }
 
-ResourceHandle AssetManager::CreateShaderCollection (ResourceHandle vertex, ResourceHandle fragment)
+ResourceView<Geometry> AssetManager::GetGeometry(ResourceHandle handle)
 {
 	GET_SINGLETON
-	ResourceHandle handle = GenerateHandle ();
-
-	instance->m_shaderCollections.emplace (handle, ProtoShader {vertex, fragment, handle});
-
-	return handle;
+	return instance->m_geometries.Get (handle);
 }
 
-ProtoShader AssetManager::GetShaderCollection (ID_64 hash)
+ResourceView<MaterialTemplateSTD430> AssetManager::GetMaterialTemplate(ResourceHandle handle)
 {
 	GET_SINGLETON
-	return instance->m_shaderCollections[hash];
+	return instance->m_materials.Get(handle);
 }
 
-ResourceHandle AssetManager::LoadTexture (std::string path)
+ResourceHandle AssetManager::CreateGeometry(
+	std::vector<float> vertices,
+	std::vector<uint32_t> indices,
+	std::shared_ptr<VertexTemplate> vertexTemplate
+)
+{
+	GET_SINGLETON
+
+	return instance->m_geometries.Create (vertices, indices, vertexTemplate);
+}
+
+ResourceHandle AssetManager::CreateMaterialTemplate (UniformBlueprint && uniforms)
+{
+	GET_SINGLETON
+	return instance->m_materials.Create(uniforms);
+}
+
+MaterialInstance AssetManager::CreateMaterial(ResourceHandle materialTemplate)
+{
+	GET_SINGLETON
+	auto material = instance->m_materials.Get(materialTemplate);
+
+	if (material.HasValue())
+	{
+		return MaterialInstance {materialTemplate, material->Size()};
+	}
+
+	return MaterialInstance {materialTemplate, 0};
+}
+
+ResourceHandle AssetManager::LoadTexture(std::string path)
 {
 	GET_SINGLETON
 	return instance->m_textures.Load (path);
 }
 
-ResourceHandle AssetManager::LoadShaderSource (std::string path)
+ResourceHandle AssetManager::LoadShaderSource(std::string path)
 {
 	GET_SINGLETON
 	return instance->m_shaderSources.Load (path);
 }
 
-void AssetManager::Cache (std::string key, ResourceHandle handle)
+void AssetManager::Cache(std::string key, ResourceHandle handle)
 {
 	GET_SINGLETON
 
 	instance->m_keyCache[key] = handle;
 	instance->m_keyCacheReversed[handle] = key;
 }
-ResourceHandle AssetManager::Cache (std::string key)
+ResourceHandle AssetManager::Cache(std::string key)
 {
 	GET_SINGLETON
 
@@ -135,7 +105,7 @@ ResourceHandle AssetManager::Cache (std::string key)
 }
 
 template <>
-bool Resource<Texture>::LoadFromDisk (std::string path)
+bool Resource<Texture>::LoadFromDisk(std::string path)
 {
 	m_path = path;
 
@@ -165,7 +135,7 @@ bool Resource<Texture>::LoadFromDisk (std::string path)
 }
 
 template <>
-bool Resource<ShaderSource>::LoadFromDisk (std::string path)
+bool Resource<ShaderSource>::LoadFromDisk(std::string path)
 {
 	m_path = path;
 
@@ -178,6 +148,41 @@ bool Resource<ShaderSource>::LoadFromDisk (std::string path)
 	}
 
 	m_resource.source = bufferOpt.value ();
+
+	return true;
+}
+
+template <>
+template <>
+bool TLOT::Resource<TLOT::Geometry>
+::Create<
+	std::vector<float> &,
+	std::vector<uint32_t> &,
+	std::shared_ptr<TLOT::VertexTemplate> &
+>
+(
+	std::vector<float> & vertices,
+	std::vector<uint32_t> & indices,
+	std::shared_ptr<TLOT::VertexTemplate> & vertexTemplate
+)
+{
+	m_resource.vertices = vertices;
+	m_resource.indices  = indices;
+	m_resource.vertexTemplate = vertexTemplate;
+
+	return true;
+}
+
+template<>
+template<>
+bool
+TLOT::Resource<TLOT::MaterialTemplateSTD430>
+::Create<TLOT::AssetManager::UniformBlueprint &>(TLOT::AssetManager::UniformBlueprint & uniforms)
+{
+	for (auto params : uniforms)
+	{
+		m_resource.AddUniform (params.first, params.second);
+	}
 
 	return true;
 }

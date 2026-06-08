@@ -5,10 +5,10 @@
 namespace TLOT
 {
     struct DrawCommand {
-		uint32_t index_count;
-		uint32_t instance_count;
-		uint32_t base_index;
-		int32_t  base_vertex;
-		uint32_t base_instance;
+		uint32_t indexCount;
+		uint32_t instanceCount;
+		uint32_t firstIndex;
+		int32_t  baseVertex;
+		uint32_t baseInstance;
 	};
 }

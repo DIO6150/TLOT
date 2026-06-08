@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include <core/Utils.hpp>
+#include <Internal/Hash.hpp>
 
 namespace TLOT
 {

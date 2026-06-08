@@ -11,11 +11,11 @@ inline float smoothstep(float edge0, float edge1, float t) {
 	return t * t * (3.0f - 2.0f * t);
 }
 
-float easeOutSine(float t) {
+inline float easeOutSine(float t) {
 	return std::sin((t * 3.1415926f) / 2.0f);
 }
 
-float easeInOutCirc(float t) {
+inline float easeInOutCirc(float t) {
 	// On contraint t entre 0 et 1 pour éviter les erreurs de racine carrée
 	t = glm::clamp(t, 0.0f, 1.0f);
 

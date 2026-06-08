@@ -1,6 +1,6 @@
 ﻿CXX       := g++
 CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include -Ideps/imgui -Ideps/imgui/backend
-CXX_FLAGS += -O0 -g
+CXX_FLAGS += -O0 -g 
 
 AR        := ar
 AR_FLAGS  := rcs
@@ -12,7 +12,7 @@ LIB_DIR := lib
 EXEC_WINDOWS := $(BIN_DIR)/$(LIB_DIR)/libTetoEngine.a
 LIBS_FLAGS_WINDOWS := -lglfw3 -lgdi32 -lopengl32 -lstdc++exp
 
-EXEC_LINUX := $(BIN_DIR)/$(LIB_DIR)/tetoEngine.s
+EXEC_LINUX := $(BIN_DIR)/$(LIB_DIR)/libTetoEngine.a
 LIBS_FLAGS_LINUX := -lglfw3
 
 SRC := $(wildcard $(SRC_DIR)/*.cpp)

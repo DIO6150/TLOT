@@ -10,37 +10,36 @@
 #include <Resources/Texture.hpp>
 #include <Resources/ShaderSource.hpp>
 
-#include <MeshData/Mesh.hpp>
+#include <Geometry.hpp>
+#include <Material/MaterialTemplate.hpp>
 
 namespace TLOT
 {
-	struct ProtoShader
-	{
-		ResourceHandle vertex;
-		ResourceHandle fragment;
-
-		ResourceHandle handle;
-	};
+	class MaterialInstance;
 
 	class AssetManager
 	{
 	public:
-		static Mesh const & GetQuadMesh ();
+		using UniformBlueprint = std::vector<std::pair<std::string, UniformType>>;
 
-		static Texture const & GetTexture (ResourceHandle handle);
-		static ShaderSource const & GetShaderSource (ResourceHandle handle);
+		static ResourceView<Texture> GetTexture(ResourceHandle handle);
+		static ResourceView<ShaderSource> GetShaderSource(ResourceHandle handle);
+		static ResourceView<Geometry> GetGeometry(ResourceHandle handle);
+		static ResourceView<MaterialTemplateSTD430> GetMaterialTemplate(ResourceHandle handle);
 
-		static ResourceHandle LoadTexture (std::string path);
-		static ResourceHandle LoadShaderSource (std::string path);
+		static ResourceHandle LoadTexture(std::string path);
+		static ResourceHandle LoadShaderSource(std::string path);
 
-		static ResourceHandle CreateShaderCollection (ResourceHandle vertex, ResourceHandle fragment);
-		static ProtoShader GetShaderCollection (ResourceHandle hash);
+		static ResourceHandle CreateGeometry(std::vector<float> vertices, std::vector<uint32_t> indices, std::shared_ptr<VertexTemplate> vertexTemplate);
+		static ResourceHandle CreateMaterialTemplate(UniformBlueprint && uniforms);
 
-		static void Cache (std::string key, ResourceHandle handle);
-		static ResourceHandle Cache (std::string key);
+		static MaterialInstance CreateMaterial(ResourceHandle materialTemplate);
+
+		static void Cache(std::string key, ResourceHandle handle);
+		static ResourceHandle Cache(std::string key);
 		
 	private:
-		static AssetManager & GetInstance ()
+		static AssetManager & GetInstance()
 		{
 			static AssetManager instance {};
 			return instance;
@@ -48,26 +47,39 @@ namespace TLOT
 
 		ResourceCache<Texture> m_textures;
 		ResourceCache<ShaderSource> m_shaderSources;
-
-		std::map<ResourceHandle, ProtoShader> m_shaderCollections;
+		ResourceCache<Geometry> m_geometries;
+		ResourceCache<MaterialTemplateSTD430> m_materials;
 
 		std::map<std::string, ResourceHandle> m_keyCache;
 		std::map<ResourceHandle, std::string> m_keyCacheReversed;
 
-		Mesh m_quadMesh;
+		AssetManager();
+		AssetManager(AssetManager && AssetManager) = delete;
+		AssetManager(AssetManager const & AssetManager) = delete;
+		AssetManager(AssetManager & AssetManager) = delete;
+		AssetManager & operator=(AssetManager && AssetManager) = delete;
+		AssetManager & operator=(AssetManager & AssetManager) = delete;
+		AssetManager & operator=(AssetManager const & AssetManager) = delete;
 
-		AssetManager ();
-		AssetManager (AssetManager && AssetManager) = delete;
-		AssetManager (AssetManager const & AssetManager) = delete;
-		AssetManager (AssetManager & AssetManager) = delete;
-		AssetManager & operator= (AssetManager && AssetManager) = delete;
-		AssetManager & operator= (AssetManager & AssetManager) = delete;
-		AssetManager & operator= (AssetManager const & AssetManager) = delete;
-
-		friend class SceneEditor;
+		friend class SceneInspector;
 	};
 }
 
-template <> bool TLOT::Resource<TLOT::Texture>::LoadFromDisk (std::string path);
+template<> bool TLOT::Resource<TLOT::Texture>::LoadFromDisk (std::string path);
+template<> bool TLOT::Resource<TLOT::ShaderSource>::LoadFromDisk (std::string path);
 
-template <> bool TLOT::Resource<TLOT::ShaderSource>::LoadFromDisk (std::string path);
+template<> template<> bool TLOT::Resource<TLOT::Geometry>
+::Create<
+	std::vector<float> &,
+	std::vector<uint32_t> &,
+	std::shared_ptr<TLOT::VertexTemplate> &
+>
+(
+	std::vector<float> & vertices,
+	std::vector<uint32_t> & indices,
+	std::shared_ptr<TLOT::VertexTemplate> & vertexTemplate
+);
+
+template<> template<> bool TLOT::Resource<TLOT::MaterialTemplateSTD430>
+::Create<TLOT::AssetManager::UniformBlueprint &>(TLOT::AssetManager::UniformBlueprint & uniforms);
+

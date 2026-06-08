@@ -51,13 +51,6 @@ void RenderContext::Init (size_t w, size_t h, std::string const & title, bool fu
 
 	//glfwSetInputMode (window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-	// put this in renderer idk
-	glEnable (GL_DEPTH_TEST);
-	glDepthFunc (GL_LESS);
-	glEnable (GL_BLEND);
-	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glFrontFace (GL_CCW);
-
 	glViewport (0, 0, (GLsizei)w, (GLsizei)h);
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glfwSwapInterval (0);

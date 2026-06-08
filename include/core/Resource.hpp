@@ -30,10 +30,11 @@ namespace TLOT
 		}
 		
 		bool LoadFromDisk (std::string path);
+		template<class ... Args> bool Create(Args && ...);
 
-		ID_64 Hash ()
+		ID64_t Hash ()
 		{
-			ID_64 hash = hash_combine (m_handle, m_handle);
+			ID64_t hash = hash_combine (m_handle, m_handle);
 			return hash;
 		}
 

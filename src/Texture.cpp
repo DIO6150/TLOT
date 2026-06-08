@@ -62,3 +62,12 @@ Texture & Texture::operator= (Texture && other)
 
 	return *this;
 }
+
+Texture::Texture (Texture && other)
+{
+	data	= other.data;
+	width	= other.width;
+	height	= other.height;
+
+	other.data = nullptr;
+}

@@ -14,7 +14,7 @@
 
 using namespace TLOT;
 
-TextureAtlas::TextureAtlas ()
+TextureAtlas::TextureAtlas()
 {
 	TextureQuad canvas;
 	canvas.x = 0;
@@ -23,32 +23,38 @@ TextureAtlas::TextureAtlas ()
 	canvas.h = m_height;
 	canvas.depth = 0;
 
-	m_partitions.push_back ({canvas, false});
+	m_partitions.push_back({canvas, false});
 }
 
-TextureAtlas::~TextureAtlas () {
-	if (m_handle) {
-		glDeleteTextures (1, &m_handle);
+TextureAtlas::~TextureAtlas() {
+	if(m_handle) {
+		glDeleteTextures(1, &m_handle);
 	}
 }
 
-unsigned int TextureAtlas::Get () const {
-	return (m_handle);
+unsigned int TextureAtlas::Get() const {
+	return(m_handle);
 }
 
-static bool comp_quad_pair (std::pair<TextureQuad, bool> a, std::pair<TextureQuad, bool> b) {
-	return (a.first.w * a.first.h < b.first.w * b.first.h);
+static bool comp_quad_pair(std::pair<TextureQuad, bool> a, std::pair<TextureQuad, bool> b) {
+	return(a.first.w * a.first.h < b.first.w * b.first.h);
 }
 
 // TODO-fix: add depth
-// TODO-critical: if it can't find a partition large enough, it may break things, fix this asap
-bool TextureAtlas::Feed (ResourceHandle handle, Texture const & texture) {
-	if (m_quads.find (handle) != m_quads.end ()) {
+bool TextureAtlas::Feed(ResourceHandle handle) {
+	auto texture = AssetManager::GetTexture(handle);
+	
+	if (!texture.HasValue())
 		return false;
-	}
 
-	size_t width  = texture.width;
-	size_t height = texture.height;
+	if (texture->data == nullptr)
+		return false;
+	
+	if (m_quads.find(handle) != m_quads.end())
+		return false;
+
+	size_t width  = texture->width;
+	size_t height = texture->height;
 
 	bool generate_right = false;
 	bool generate_top = false;
@@ -57,22 +63,22 @@ bool TextureAtlas::Feed (ResourceHandle handle, Texture const & texture) {
 	TextureQuad top;
 
 	// the first partion we find will have the least amount of divided space
-	std::sort (m_partitions.begin (), m_partitions.end (), comp_quad_pair);
+	std::sort(m_partitions.begin(), m_partitions.end(), comp_quad_pair);
 
 	// we are trying to find a partition fitting the dimension of the texture in the partitioned space of the atlas
-	for (auto & [quad, assigned] : m_partitions) {
+	for(auto & [quad, assigned] : m_partitions) {
 		// partition already holds a texture
-		if (assigned) continue;
+		if(assigned) continue;
 
 		// texture too big for parition
-		if (quad.w < width || quad.h < height) continue;
+		if(quad.w < width || quad.h < height) continue;
 
 		size_t deltaWidth  = quad.w - width;
 		size_t deltaHeight = quad.h - height;
 
 		// new partitions are created to fill in remaining space
 
-		if (quad.x  + width < m_width) {
+		if(quad.x + width < m_width) {
 			right.x = quad.x + width;
 			right.y = quad.y;
 			right.w = deltaWidth;
@@ -82,7 +88,7 @@ bool TextureAtlas::Feed (ResourceHandle handle, Texture const & texture) {
 			generate_right = true;
 		}
 
-		if (quad.y + height < m_height) {	
+		if(quad.y + height < m_height) {	
 			top.x  = quad.x;
 			top.y  = quad.y + height;
 			top.w  = quad.w;
@@ -97,22 +103,22 @@ bool TextureAtlas::Feed (ResourceHandle handle, Texture const & texture) {
 		quad.h = height;
 		assigned = true;
 
-		m_quads.emplace (handle, std::make_unique<TextureQuad> (quad));
+		m_quads.emplace(handle, std::make_unique<TextureQuad>(quad));
 		m_dirty = true;
 		break;
 	}
 
-	if (generate_right) m_partitions.push_back ({right, false});
-	if (generate_top  ) m_partitions.push_back ({top,   false});
+	if(generate_right) m_partitions.push_back({right, false});
+	if(generate_top  ) m_partitions.push_back({top,   false});
 
 	return true;
 }
 
-void TextureAtlas::Generate () {
-	if (!m_dirty) return;
+void TextureAtlas::Generate() {
+	if(!m_dirty) return;
 
-	if (m_handle) {
-		glDeleteTextures (1, &m_handle);
+	if(m_handle) {
+		glDeleteTextures(1, &m_handle);
 	}
 
 	glActiveTexture(GL_TEXTURE0);
@@ -125,10 +131,12 @@ void TextureAtlas::Generate () {
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, m_width, m_height, 1);
-	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+	//glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
-	for (const auto & [textureID, quad] : m_quads) {
-		Texture const & texture = AssetManager::GetTexture (textureID);
+	for(const auto & [textureID, quad] : m_quads) {
+		auto texture = AssetManager::GetTexture(textureID);
+		if(!texture.HasValue())
+			continue;
 		
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
 			0,
@@ -136,48 +144,46 @@ void TextureAtlas::Generate () {
 			quad->w, quad->h, 1,
 			GL_RGBA,
 			GL_UNSIGNED_BYTE,
-			texture.data
+			texture->data
 		);
 	}
 
 	m_dirty = false;
 }
 
-TextureQuad TextureAtlas::Quad (ResourceHandle texture) const {
-	auto pos = m_quads.find (texture);
+TextureQuad TextureAtlas::Quad(ResourceHandle texture) const {
+	auto pos = m_quads.find(texture);
 
-	if (pos == m_quads.end ()) {
-		Logger::panic ("Handle is not registered in this atlas");
-		return TextureQuad {};
-	}
+	if(pos == m_quads.end())
+		return TextureQuad {0., 0., 1., 1., 0.};
 
-	return *pos->second.get ();
+	return *pos->second.get();
 }
 
-size_t TextureAtlas::Width () const {
+size_t TextureAtlas::Width() const {
 	return m_width;
 }
 
-size_t TextureAtlas::Height () const {
+size_t TextureAtlas::Height() const {
 	return m_height;
 }
 
-void TextureAtlas::Resize (size_t newWidth, size_t newHeight) {
+void TextureAtlas::Resize(size_t newWidth, size_t newHeight) {
 	m_width  = newWidth;
 	m_height = newHeight;
 
-	Reconstruct ();
+	Reconstruct();
 }
 
-void TextureAtlas::Reconstruct () {
+void TextureAtlas::Reconstruct() {
 	std::vector<ResourceHandle> textures;
 
-	for (auto & [id, _] : m_quads) {
-		textures.push_back (id);
+	for(auto & [id, _] : m_quads) {
+		textures.push_back(id);
 	}
 
-	m_partitions.clear ();
-	m_quads.clear ();
+	m_partitions.clear();
+	m_quads.clear();
 
 	TextureQuad canvas;
 	canvas.x = 0;
@@ -186,11 +192,10 @@ void TextureAtlas::Reconstruct () {
 	canvas.h = m_height;
 	canvas.depth = 1;
 
-	m_partitions.push_back ({canvas, false});
+	m_partitions.push_back({canvas, false});
 
-	for (auto const & textureID : textures)
+	for(auto const & textureID : textures)
 	{
-		Texture const & texture = AssetManager::GetTexture (textureID);
-		Feed (textureID, texture);
+		Feed(textureID);
 	}
 }
