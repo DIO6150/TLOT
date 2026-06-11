@@ -23,8 +23,6 @@ namespace TLOT
 
 		size_t m_nextIndex = 0;
 		std::set<size_t> m_freeIndexes;
-
-		SSBO m_ssbo;
 	};
 
 	class MultiIndexLocation

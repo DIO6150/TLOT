@@ -7,7 +7,7 @@ using namespace TLOT;
 
 IndexLocation::IndexLocation()
 {
-	m_ssbo.Create(GL_DYNAMIC_DRAW, 2, 10000000); // 10Mo
+
 }
 
 uint32_t IndexLocation::Create()
@@ -17,13 +17,7 @@ uint32_t IndexLocation::Create()
 
 void IndexLocation::Destroy(uint32_t index)
 {
-	//std::cout << "[FREE ] " << index << '\n';
 	assert(!m_freeIndexes.contains(index));
-
-	if (index > m_nextIndex)
-	{
-		std::cout << "[FREE ] WHAT ? \n";
-	}
 
 	m_freeIndexes.emplace(index);
 }
@@ -43,13 +37,6 @@ uint32_t IndexLocation::GenerateIndex()
         index = *m_freeIndexes.begin();
         m_freeIndexes.erase(m_freeIndexes.begin());
     }
-
-    //std::cout << "[ALLOC] " << index << '\n';
-
-	if (m_nextIndex > 80 && index < 50)
-	{
-		std::cout << "[ALOC ] WHAT ? \n";
-	}
 
     return index;
 }

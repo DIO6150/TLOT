@@ -135,8 +135,6 @@ TextObject::TextObject(
 	m_normalFont = normal;
 	m_italicFont = italic;
 	m_boldFont   = bold;
-
-	std::cout << "TextObject generated with material index = " << m_instance.materialIndex << "\n";
 }
 
 void TextObject::SetText(std::string text, size_t fontSize)
@@ -153,6 +151,9 @@ void TextObject::SetText(std::string text, size_t fontSize)
 	}
 	m_renderedGlyph.clear();
 	m_glyphs.clear();
+
+	if (text.empty())
+		return;
 
 	auto tokens = TokenizeString(text);
 
@@ -249,6 +250,9 @@ void TextObject::SetText(std::string text, size_t fontSize)
 
 		else if (token.type == TokenType::TEXT)
 		{
+			if (token.value.empty())
+				continue;
+
 			for (auto & character : token.value)
 			{
 				auto compiledToken = CommonObject {m_renderer, AssetManager::Cache("geometry_quad"), AssetManager::Cache("material_glyph")};
@@ -280,8 +284,6 @@ void TextObject::SetText(std::string text, size_t fontSize)
 			}
 		}
 	}
-
-	std::cout << "Last TextObject character material index is : " << m_renderedGlyph.back().m_instance.materialIndex  << "\n";
 }
 
 void TextObject::Destroy()
