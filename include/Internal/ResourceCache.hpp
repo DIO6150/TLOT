@@ -15,9 +15,9 @@ namespace TLOT
 	{
 	public:
 		ResourceView() {}
-		ResourceView(ResourceType const & resource): m_hasValue{true}, m_value{&resource} {}
+		ResourceView(ResourceType & resource): m_hasValue{true}, m_value{&resource} {}
 
-		ResourceType const & Get() { return *m_value; }
+		ResourceType & Get() { return *m_value; }
 		ResourceType const * operator->() { return m_value; }
 		operator bool() { return m_hasValue; }
 
@@ -25,7 +25,7 @@ namespace TLOT
 
 	private:
 		bool m_hasValue = false;
-		ResourceType const * m_value;
+		ResourceType * m_value;
 	};
 
 	template<IsResource ResourceType>

@@ -11,6 +11,9 @@
 #include <Debugger/DebugMessages.hpp>
 
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 
 using namespace TLOT;
 
@@ -44,7 +47,8 @@ void RenderContext::Init (size_t w, size_t h, std::string const & title, bool fu
 	}
 	glfwMakeContextCurrent (window);
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
 		Logger::panic ("Couldn't initialize GLAD.");
 		exit (-1);
 	}
@@ -88,7 +92,6 @@ void RenderContext::Init (size_t w, size_t h, std::string const & title, bool fu
 	height = h;
 
 	InputManager::getInstance ().init (window);
-
 }
 
 void RenderContext::Update ()

@@ -3,6 +3,8 @@
 #include <Material/MaterialInstance.hpp>
 #include <Renderer/Renderer.hpp>
 
+#include <string>
+
 namespace TLOT
 {
 	class IObject
@@ -30,6 +32,8 @@ namespace TLOT
 
 		virtual void UpdateTransform() = 0;
 		virtual void UpdateMaterial() = 0;
+
+		virtual void Destroy() = 0;
 	};
 
 	class CommonObject : public IObject
@@ -60,6 +64,8 @@ namespace TLOT
 		void UpdateTransform() override;
 		void UpdateMaterial() override;
 
+		void Destroy() override;
+
 	protected:
 		SceneObject m_instance;
 		Transform m_transform;
@@ -69,5 +75,34 @@ namespace TLOT
 
 		bool m_transformUpdateFlag = true;
 		bool m_materialUpdateFlag = true;
+
+		friend class TextObject;
+	};
+
+	class TextObject : public CommonObject
+	{
+	public:
+		TextObject(Renderer * renderer, ResourceHandle normal, ResourceHandle italic, ResourceHandle bold);
+		void SetText(std::string text, size_t fontSize);
+
+		void SetPosition(glm::vec3 translate) override;
+
+		float GetWidth() { return m_maxWidth; }
+		float GetHeight() { return m_maxHeight; }
+
+		void Destroy() override;
+		void Render() override;
+
+	protected:
+		ResourceHandle m_normalFont;
+		ResourceHandle m_italicFont;
+		ResourceHandle m_boldFont;
+
+		std::string m_text;
+		std::vector<CommonObject> m_renderedGlyph;
+		std::vector<Glyph> m_glyphs;
+
+		float m_maxWidth = 0;
+		float m_maxHeight = 0;
 	};
 }

@@ -40,8 +40,8 @@ void GeometryLocation::Upload()
 	for (auto & [geometryID, geometry] : m_toUpload)
 	{
 		auto offsets = m_geometry.at(geometryID);
-		size_t vboByteOffset = offsets.vertexBegin;
-		size_t eboByteOffset = offsets.indexBegin;
+		size_t vboByteOffset = offsets.vertexBegin * sizeof(float);
+		size_t eboByteOffset = offsets.indexBegin  * sizeof(uint32_t);
 
 		m_vbo.Upload(geometry.vertices, vboByteOffset);
 		m_ebo.Upload(geometry.indices , eboByteOffset);
@@ -52,7 +52,7 @@ void GeometryLocation::Upload()
 
 size_t GeometryLocation::GetFirstVertex(ResourceHandle geometryID)
 {
-	return m_geometry.at(geometryID).vertexBegin;
+	return m_geometry.at(geometryID).vertexBegin / (m_template->Size() / sizeof(float));
 }
 
 size_t GeometryLocation::GetFirstIndex (ResourceHandle geometryID)

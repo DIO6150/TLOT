@@ -4,6 +4,8 @@
 #include <Material/MaterialInstance.hpp>
 #include <OpenGL/DrawCommand.hpp>
 #include <Renderer/Renderer.hpp>
+#include <Resources/Font.hpp>
+
 
 
 using namespace TLOT;
@@ -26,17 +28,25 @@ void SetupTechnique(Technique & technique)
 	else
 		glDisable(GL_BLEND);
 
+	if (technique.enableDepthMask)
+	{
+		glDepthMask(GL_TRUE);
+	}
+	else
+		glDepthMask(GL_FALSE);
+
 	glFrontFace(technique.frontFace);
 }
 
 Renderer::Renderer (std::shared_ptr<VertexTemplate> vertexTemplate, size_t windowWidth, size_t windowHeight)
+	: m_fontAtlas{ 2048, 2048 }
 {
 	m_geometry  .Create(vertexTemplate);
 	m_matrixSSBO.Create(GL_DYNAMIC_DRAW, 1, 10000000);
 	m_indexSSBO .Create(GL_DYNAMIC_DRAW, 0, 10000000);
 
 	m_persp = glm::perspective (glm::radians (45.0f), (float)windowWidth / windowHeight, 0.1f, 100.0f);
-	m_ortho = glm::ortho(0.0f, (float)windowWidth, 0.0f, (float)windowHeight, -1.0f, 1.0f);
+	m_ortho = glm::ortho(0.0f, (float)windowWidth, 0.0f, (float)windowHeight, -10.0f, 10.0f);
 }
 
 TextureQuad Renderer::Quad(ResourceHandle handle)
@@ -63,6 +73,12 @@ TextureQuad Renderer::Quad(ResourceHandle handle)
 
 	return scaled;
 }
+
+TextureQuad Renderer::Glyph(ResourceHandle font, char character, size_t fontSize)
+{
+	return m_fontAtlas.GetGlyph(character, fontSize, font);
+}
+
 
 ID64_t Renderer::CreateProgram(ResourceHandle vertexSource, ResourceHandle fragmentSource)
 {
@@ -97,16 +113,42 @@ ID64_t Renderer::CreateProgram(ResourceHandle vertexSource, ResourceHandle fragm
 	return handle; // should it returns the opengl handle instead ?
 }
 
-void Renderer::RegisterTechnique(Technique technique)
+void Renderer::RegisterTechnique(Technique technique, float order)
 {
 	auto materialTemplate = AssetManager::GetMaterialTemplate(technique.material);
 
 	if (!materialTemplate.HasValue())
 		return;
 
-	m_techniques.emplace_back(technique);
+	m_techniques.emplace_back(order, technique);
 	m_materialSSBO[technique.material].Create(GL_DYNAMIC_DRAW, 2, 10000000);
 	m_drawCommandDIBO[technique.material].Create(GL_DYNAMIC_DRAW, 10000000);
+
+	std::sort(m_techniques.begin(), m_techniques.end(), [](const auto& a, const auto& b) {
+		return a.first < b.first;
+	});
+}
+
+void Renderer::RegisterFont(ResourceHandle font)
+{
+	auto fonto = AssetManager::GetFont(font);
+
+	if (!fonto)
+		return;
+
+	// generate glyphs in renderer rather than font resource but anyway
+	for (auto size : {20, 22, 40, 44})
+	{
+		fonto.Get().GenerateSize(size);
+	}
+
+	for (auto & [size, glyphList] : fonto->getGlyphs())
+	{
+		for (auto & [character, glyph] : glyphList)
+		{
+			m_fontAtlas.InsertGlyph(character, glyph, size, font);
+		}
+	}
 }
 
 SceneObject Renderer::Instanciate(ResourceHandle geometryID, MaterialInstance material, Transform transform)
@@ -144,7 +186,7 @@ void Renderer::KillInstance(SceneObject instance)
 		return;
 
 	m_matrixLocation  .Destroy(instance.matrixIndex);
-	m_materialLocation.Destroy(instance.materialID, instance.matrixIndex);
+	m_materialLocation.Destroy(instance.materialID, instance.materialIndex);
 }
 
 void Renderer::Update(SceneObject instance, MaterialInstance material, Transform transform)
@@ -196,7 +238,7 @@ void Renderer::Render()
 	//m_indexBuffer .Bind();
 
 	// for each technique apply program and drawcall
-	for (auto & technique : m_techniques)
+	for (auto & [_, technique] : m_techniques)
 	{
 		std::vector<DrawCommand> & commands = renderData.commands[technique.material];
 		m_drawCommandDIBO[technique.material].Upload(commands, 0);
@@ -218,10 +260,14 @@ void Renderer::Render()
 		SetupTechnique(technique);
 		
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D_ARRAY, m_atlas.Get ());
+		if (technique.useFontAtlas)
+			glBindTexture(GL_TEXTURE_2D_ARRAY, m_fontAtlas.Get());
+		else
+			glBindTexture(GL_TEXTURE_2D_ARRAY, m_atlas.Get());
+
 		program.Upload1i("uAtlas", 0); // technically useless as showed per previous experiment (opengl seems to autobind uAtlas to the active texture 0)
 
-		glMultiDrawElementsIndirect (GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, commands.size(), 0);
+		glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, commands.size(), 0);
 
 		program.Cancel();
 	}
@@ -235,6 +281,7 @@ void Renderer::Sync()
 {
 	m_geometry.Upload();
 	m_atlas.Generate();
+	m_fontAtlas.Generate();
 }
 
 Renderer::FrameRenderData Renderer::BuildCommands(std::map<ResourceHandle, std::vector<SceneObject>> const & objects)

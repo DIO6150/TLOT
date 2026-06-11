@@ -1,7 +1,7 @@
 #include <vector>
 
 #include <Renderer/IndexLocation.hpp>
-
+#include <iostream>
 
 using namespace TLOT;
 
@@ -17,21 +17,41 @@ uint32_t IndexLocation::Create()
 
 void IndexLocation::Destroy(uint32_t index)
 {
+	//std::cout << "[FREE ] " << index << '\n';
+	assert(!m_freeIndexes.contains(index));
+
+	if (index > m_nextIndex)
+	{
+		std::cout << "[FREE ] WHAT ? \n";
+	}
+
 	m_freeIndexes.emplace(index);
 }
 
 uint32_t IndexLocation::GenerateIndex()
 {
-	if(m_freeIndexes.empty())
+	//return m_nextIndex++; // quand j'utilises pas le système de réutilisation d'indice, ya pas de soucis
+
+	uint32_t index;
+
+    if (m_freeIndexes.empty())
+    {
+        index = m_nextIndex++;
+    }
+    else
+    {
+        index = *m_freeIndexes.begin();
+        m_freeIndexes.erase(m_freeIndexes.begin());
+    }
+
+    //std::cout << "[ALLOC] " << index << '\n';
+
+	if (m_nextIndex > 80 && index < 50)
 	{
-		return m_nextIndex++;
+		std::cout << "[ALOC ] WHAT ? \n";
 	}
 
-	for (auto index : m_freeIndexes)
-	{
-		m_freeIndexes.erase(index);
-		return index;
-	}
+    return index;
 }
 
 uint32_t MultiIndexLocation::Create(uint64_t base)

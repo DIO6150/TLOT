@@ -50,19 +50,13 @@ namespace TLOT
 		{
 			size_t size      = GetSizeSTD430(type);
 			size_t alignment = GetAligmentSTD430(type);
-
-			// 1. Calcul du reste de la division entre la taille actuelle et l'alignement requis
 			size_t remainder = m_totalSize % alignment;
-
-			// 2. Calcul du padding (l'espace vide à ajouter) pour s'aligner
 			size_t padding = (remainder == 0) ? 0 : (alignment - remainder);
-
-			// 3. Le véritable offset est la taille actuelle + le padding
 			size_t offset = m_totalSize + padding;
 
-			// Ajout et mise à jour
 			m_uniforms.emplace_back(type, name, size, offset);
 			m_totalSize = offset + size;
+			m_maxAlignment = std::max(m_maxAlignment, alignment);
 		}
 
 		UniformLayout const * Get(std::string name) const
@@ -77,7 +71,12 @@ namespace TLOT
 
 		size_t Size() const
 		{
-			return m_totalSize;
+			size_t remainder = m_totalSize % m_maxAlignment;
+
+			if (remainder == 0)
+				return m_totalSize;
+
+			return m_totalSize + (m_maxAlignment - remainder);
 		}
 
 		std::vector<UniformLayout> const & Layout() const
@@ -88,5 +87,6 @@ namespace TLOT
 	private:
 		std::vector<UniformLayout> m_uniforms;
 		size_t m_totalSize = 0;
+		size_t m_maxAlignment = 1;
 	};
 }

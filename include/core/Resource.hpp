@@ -18,13 +18,19 @@ namespace TLOT
 	public:
 		Resource (ResourceHandle handle) : m_handle {handle} {}
 
+		Resource(Resource<ResourceType> && rhs)
+		{
+			m_resource = std::move(rhs.m_resource);
+			m_handle   = rhs.m_handle;
+			m_path     = std::move(rhs.m_path);
+		}
+
 		ResourceHandle GetHandle () const
 		{
 			return m_handle;
 		}
-
 		
-		ResourceType const & Get ()
+		ResourceType & Get ()
 		{
 			return m_resource;
 		}

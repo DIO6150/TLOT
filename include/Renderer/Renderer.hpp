@@ -10,6 +10,7 @@
 #include <OpenGL/BufferObject/DIBO.hpp>
 #include <OpenGL/ShaderProgram.hpp>
 #include <OpenGL/TextureAtlas/TextureAtlas.hpp>
+#include <OpenGL/TextureAtlas/GlyphAtlas.hpp>
 #include <Transform.hpp>
 
 #include <AssetManager.hpp>
@@ -41,8 +42,12 @@ namespace TLOT
 		Renderer(std::shared_ptr<VertexTemplate> vertexTemplate, size_t windowWidth, size_t windowHeight);
 		
 		TextureQuad Quad(ResourceHandle texture);
+		TextureQuad Glyph(ResourceHandle font, char character, size_t fontSize);
+		glm::vec2 GlyphBearing(ResourceHandle font, char character, size_t fontSize);
+
 		ID64_t CreateProgram(ResourceHandle vertexSource, ResourceHandle fragmentSource);
-		void RegisterTechnique(Technique technique);
+		void RegisterTechnique(Technique technique, float order);
+		void RegisterFont(ResourceHandle font);
 
 		SceneObject Instanciate(ResourceHandle geometryID, MaterialInstance material, Transform transform);
 		void KillInstance(SceneObject instance);
@@ -53,7 +58,8 @@ namespace TLOT
 		void Render(SceneObject instance);
 
 		void Render();
-
+		
+		void Sync();
 	private:
 		struct InstanceData
 		{
@@ -67,7 +73,6 @@ namespace TLOT
 			std::vector<InstanceData> instanceDataSSBO;
 		};
 		
-		void Sync();
 		FrameRenderData BuildCommands(std::map<ResourceHandle, std::vector<SceneObject>> const & sceneObjects);
 
 		std::map<ResourceHandle, std::vector<SceneObject>> m_toRender;
@@ -83,10 +88,11 @@ namespace TLOT
 		glm::mat4 m_persp;
 		glm::mat4 m_ortho;
 		
-		std::vector<Technique> m_techniques; // material -> technique
+		std::vector<std::pair<float, Technique>> m_techniques; // material -> technique
 		std::map<ID64_t, ShaderProgram> m_programs; // program hash -> program
 
 		TextureAtlas m_atlas;
+		GlyphAtlas   m_fontAtlas;
 
 		ID64_t m_nextInstanceID = 0;
 

@@ -10,7 +10,7 @@
 
 using namespace TLOT;
 
-Texture::Texture (unsigned char * data, size_t width, size_t height) :
+Texture::Texture(unsigned char * data, size_t width, size_t height) :
 	data	{data},
 	width	{width},
 	height	{height}
@@ -18,40 +18,20 @@ Texture::Texture (unsigned char * data, size_t width, size_t height) :
 
 }
 
-Texture::~Texture ()
-{
-	Logger::log (LogLevel::Info, "destructor called !");
-	if (data)
-		free (data);
-}
-
-Texture::Texture (Texture const & other):
-	width {other.width},
-	height {other.height}
-{
-	Logger::log (LogLevel::Info, "Texture copied ! Be careful !");
-	// staying consistent with stbi_load
-	data = (unsigned char *) malloc (width * height * 4);
-	// TODO : store channels
-	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
-}
-
-Texture::Texture (Texture & other):
-	width {other.width},
-	height {other.height}
-{
-	Logger::log (LogLevel::Info, "Texture copied ! Be careful !");
-	// staying consistent with stbi_load
-	data = (unsigned char *) malloc (width * height * 4);
-	// TODO : store channels
-	std::memcpy (data, other.data, sizeof (char) * width * height * 4);
-}
-
-Texture & Texture::operator= (Texture && other)
+Texture::~Texture()
 {
 	if (data)
 	{
-		free (data);
+		Logger::log(LogLevel::Info, "destructor called !");
+		free(data);
+	}
+}
+
+Texture & Texture::operator=(Texture && other)
+{
+	if (data)
+	{
+		free(data);
 	}
 
 	data	= other.data;
@@ -63,11 +43,33 @@ Texture & Texture::operator= (Texture && other)
 	return *this;
 }
 
-Texture::Texture (Texture && other)
+Texture::Texture(Texture && other)
 {
 	data	= other.data;
 	width	= other.width;
 	height	= other.height;
 
 	other.data = nullptr;
+}
+
+Texture::Texture(Texture & other)
+{
+	data =(unsigned char*) malloc(4 * other.width * other.height);
+	width = other.width;
+	height = other.height;
+
+	memcpy(data, other.data, width * height * 4);
+
+	Logger::log(LogLevel::Warning, "Copying texture, this is NOT cheap(well, maybe it is)");
+}
+
+Texture::Texture(Texture const & other)
+{
+	data =(unsigned char*) malloc(4 * other.width * other.height);
+	width = other.width;
+	height = other.height;
+
+	memcpy(data, other.data, width * height * 4);
+
+	Logger::log(LogLevel::Warning, "Copying texture, this is NOT cheap(well, maybe it is)");
 }

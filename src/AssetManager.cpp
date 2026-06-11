@@ -31,6 +31,12 @@ ResourceView<ShaderSource> AssetManager::GetShaderSource(ResourceHandle handle)
 	return instance->m_shaderSources.Get (handle);
 }
 
+ResourceView<Font> AssetManager::GetFont(ResourceHandle handle)
+{
+	GET_SINGLETON
+	return instance->m_fonts.Get (handle);
+}
+
 ResourceView<Geometry> AssetManager::GetGeometry(ResourceHandle handle)
 {
 	GET_SINGLETON
@@ -54,7 +60,7 @@ ResourceHandle AssetManager::CreateGeometry(
 	return instance->m_geometries.Create (vertices, indices, vertexTemplate);
 }
 
-ResourceHandle AssetManager::CreateMaterialTemplate (UniformBlueprint && uniforms)
+ResourceHandle AssetManager::CreateMaterialTemplate(UniformBlueprint && uniforms)
 {
 	GET_SINGLETON
 	return instance->m_materials.Create(uniforms);
@@ -83,6 +89,12 @@ ResourceHandle AssetManager::LoadShaderSource(std::string path)
 {
 	GET_SINGLETON
 	return instance->m_shaderSources.Load (path);
+}
+
+ResourceHandle AssetManager::LoadFont(std::string path, FT_Library library)
+{
+	GET_SINGLETON
+	return instance->m_fonts.Create (path, library);
 }
 
 void AssetManager::Cache(std::string key, ResourceHandle handle)
@@ -149,6 +161,20 @@ bool Resource<ShaderSource>::LoadFromDisk(std::string path)
 
 	m_resource.source = bufferOpt.value ();
 
+	return true;
+}
+
+template<>
+template<>
+bool TLOT::Resource<TLOT::Font>
+::Create<std::string &, FT_Library &> (std::string & path, FT_Library & library)
+{
+	m_resource.m_ft = library;
+	if (FT_New_Face(library, path.c_str(), 0, &m_resource.m_face)) {
+		std::cerr << "Erreur : Impossible de charger la police " << path << std::endl;
+		return false;
+	}
+	
 	return true;
 }
 

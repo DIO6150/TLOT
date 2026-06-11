@@ -1,6 +1,6 @@
 ﻿CXX       := g++
-CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include -Ideps/imgui -Ideps/imgui/backend
-CXX_FLAGS += -O0 -g 
+CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include -Ideps/imgui -Ideps/imgui/backend -Ideps/freeType/include
+CXX_FLAGS += -O0 -g
 
 AR        := ar
 AR_FLAGS  := rcs
@@ -10,7 +10,7 @@ BIN_DIR := bin
 LIB_DIR := lib
 
 EXEC_WINDOWS := $(BIN_DIR)/$(LIB_DIR)/libTetoEngine.a
-LIBS_FLAGS_WINDOWS := -lglfw3 -lgdi32 -lopengl32 -lstdc++exp
+LIBS_FLAGS_WINDOWS := -lglfw3 -lgdi32 -lopengl32 -lstdc++exp -lfreetype
 
 EXEC_LINUX := $(BIN_DIR)/$(LIB_DIR)/libTetoEngine.a
 LIBS_FLAGS_LINUX := -lglfw3
@@ -25,7 +25,7 @@ SRC += deps/imgui/backends/imgui_impl_opengl3.cpp
 OBJ := $(addprefix $(BIN_DIR)/, $(notdir $(patsubst %.cpp, %.o, $(patsubst %.c, %.o, $(SRC)))))
 
 ifeq ($(OS), Windows_NT)
-LIB_DIRS := -Llibs/windows/glfw3
+LIB_DIRS := -Llibs/windows/glfw3 -Llibs/windows/freeType
 LIBS	 := $(LIBS_FLAGS_WINDOWS)
 BIN	     := $(EXEC_WINDOWS)
 CLEAN_CMD := del /q /f $(subst /,\,$(OBJ)) $(subst /,\,$(BIN))

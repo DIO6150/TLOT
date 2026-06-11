@@ -9,6 +9,7 @@
 
 #include <Resources/Texture.hpp>
 #include <Resources/ShaderSource.hpp>
+#include <Resources/Font.hpp>
 
 #include <Geometry.hpp>
 #include <Material/MaterialTemplate.hpp>
@@ -24,11 +25,13 @@ namespace TLOT
 
 		static ResourceView<Texture> GetTexture(ResourceHandle handle);
 		static ResourceView<ShaderSource> GetShaderSource(ResourceHandle handle);
+		static ResourceView<Font> GetFont(ResourceHandle handle);
 		static ResourceView<Geometry> GetGeometry(ResourceHandle handle);
 		static ResourceView<MaterialTemplateSTD430> GetMaterialTemplate(ResourceHandle handle);
 
 		static ResourceHandle LoadTexture(std::string path);
 		static ResourceHandle LoadShaderSource(std::string path);
+		static ResourceHandle LoadFont(std::string path, FT_Library library);
 
 		static ResourceHandle CreateGeometry(std::vector<float> vertices, std::vector<uint32_t> indices, std::shared_ptr<VertexTemplate> vertexTemplate);
 		static ResourceHandle CreateMaterialTemplate(UniformBlueprint && uniforms);
@@ -49,6 +52,7 @@ namespace TLOT
 		ResourceCache<ShaderSource> m_shaderSources;
 		ResourceCache<Geometry> m_geometries;
 		ResourceCache<MaterialTemplateSTD430> m_materials;
+		ResourceCache<Font> m_fonts;
 
 		std::map<std::string, ResourceHandle> m_keyCache;
 		std::map<ResourceHandle, std::string> m_keyCacheReversed;
@@ -83,3 +87,5 @@ template<> template<> bool TLOT::Resource<TLOT::Geometry>
 template<> template<> bool TLOT::Resource<TLOT::MaterialTemplateSTD430>
 ::Create<TLOT::AssetManager::UniformBlueprint &>(TLOT::AssetManager::UniformBlueprint & uniforms);
 
+template<> template<> bool TLOT::Resource<TLOT::Font>
+::Create<std::string &, FT_Library &> (std::string & path, FT_Library & library);
