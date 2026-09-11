@@ -1,0 +1,98 @@
+[
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\AssetManager.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\AssetManager.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\AssetManager.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/AssetManager.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/AssetManager.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\GeometryBuffer.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\GeometryBuffer.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\GeometryBuffer.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/GeometryBuffer.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/GeometryBuffer.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\GeometryLocation.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\GeometryLocation.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\GeometryLocation.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/GeometryLocation.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/GeometryLocation.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\GlyphAtlas.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\GlyphAtlas.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\GlyphAtlas.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/GlyphAtlas.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/GlyphAtlas.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\IndexLocation.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\IndexLocation.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\IndexLocation.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/IndexLocation.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/IndexLocation.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\InputManager.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\InputManager.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\InputManager.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/InputManager.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/InputManager.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\MaterialInstance.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\MaterialInstance.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\MaterialInstance.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/MaterialInstance.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/MaterialInstance.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\RenderableObject.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\RenderableObject.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\RenderableObject.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/RenderableObject.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/RenderableObject.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\RenderContext.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\RenderContext.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\RenderContext.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/RenderContext.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/RenderContext.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\Renderer.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\Renderer.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\Renderer.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/Renderer.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/Renderer.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\SceneInspector.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\SceneInspector.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\SceneInspector.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/SceneInspector.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/SceneInspector.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\ShaderProgram.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\ShaderProgram.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\ShaderProgram.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/ShaderProgram.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/ShaderProgram.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\ShaderSource.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\ShaderSource.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\ShaderSource.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/ShaderSource.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/ShaderSource.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\SSBO.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\SSBO.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\SSBO.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/SSBO.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/SSBO.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\Texture.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\Texture.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\Texture.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/Texture.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/Texture.cpp.obj"
+},
+{
+  "directory": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DGLFW_DLL -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/glad/include\" -I\"C:/Users/maele/Desktop/Coding Projects/TetoEngine/vendor/imgui\" -isystem C:/msys64/ucrt64/include/freetype2 -g -std=gnu++26 -fmodules-ts -fmodule-mapper=CMakeFiles\\TetoEngine.dir\\src\\TextureAtlas.cpp.obj.modmap -MD -fdeps-format=p1689r5 -x c++ -o CMakeFiles\\TetoEngine.dir\\src\\TextureAtlas.cpp.obj -c \"C:\\Users\\maele\\Desktop\\Coding Projects\\TetoEngine\\src\\TextureAtlas.cpp\"",
+  "file": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/src/TextureAtlas.cpp",
+  "output": "C:/Users/maele/Desktop/Coding Projects/TetoEngine/build/CMakeFiles/TetoEngine.dir/src/TextureAtlas.cpp.obj"
+}
+]

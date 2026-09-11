@@ -1,0 +1,33 @@
+ninja_dyndep_version = 1.0
+build CMakeFiles/TetoEngine.dir/src/AssetManager.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/GeometryBuffer.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/GeometryLocation.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/GlyphAtlas.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/IndexLocation.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/InputManager.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/MaterialInstance.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/RenderableObject.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/RenderContext.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/Renderer.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/SceneInspector.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/ShaderProgram.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/ShaderSource.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/SSBO.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/Texture.cpp.obj: dyndep
+
+build CMakeFiles/TetoEngine.dir/src/TextureAtlas.cpp.obj: dyndep
+

@@ -1,0 +1,11 @@
+{
+"rules": [
+{
+"primary-output": "CMakeFiles\\TetoEngine.dir\\src\\GeometryLocation.cpp.obj",
+"requires": [
+]
+}
+],
+"version": 0,
+"revision": 0
+}
