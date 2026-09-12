@@ -23,10 +23,10 @@ namespace TLOT
 		void Cancel () const;
 
 		// TODO-add : cache system
-		void UploadMatrix4	(std::string key, const glm::mat4& matrix) const;
-		void Upload1i		(std::string key, int i) const;
-		void Upload3fv		(std::string key, glm::vec3 vec) const;
-		void Upload1f		(std::string key, float f) const;
+		void UploadMatrix4(std::string key, const glm::mat4& matrix) const;
+		void Upload1i     (std::string key, int i) const;
+		void Upload3fv    (std::string key, glm::vec3 vec) const;
+		void Upload1f     (std::string key, float f) const;
 
 	private:	
 		uint32_t m_program = 0;
