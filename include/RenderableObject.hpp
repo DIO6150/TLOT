@@ -34,6 +34,8 @@ namespace TLOT
 		virtual void UpdateMaterial() = 0;
 
 		virtual void Destroy() = 0;
+
+		virtual void IsVisible(bool isVisible) = 0;
 	};
 
 	class CommonObject : public IObject
@@ -66,6 +68,11 @@ namespace TLOT
 
 		void Destroy() override;
 
+		void IsVisible(bool isVisible) override
+		{
+			m_instance.isVisible = isVisible;
+		}
+
 	protected:
 		SceneObject m_instance;
 		Transform m_transform;
@@ -93,7 +100,15 @@ namespace TLOT
 		void Destroy() override;
 		void Render() override;
 
-		void IsVisible(bool flag) {}
+		void IsVisible(bool visible)
+		{
+			CommonObject::IsVisible(visible);
+
+			for (auto & rendererGlyph : m_renderedGlyph)
+			{
+				rendererGlyph.IsVisible(visible);
+			}
+		}
 
 	protected:
 		ResourceHandle m_normalFont;
