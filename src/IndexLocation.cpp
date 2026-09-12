@@ -24,8 +24,6 @@ void IndexLocation::Destroy(uint32_t index)
 
 uint32_t IndexLocation::GenerateIndex()
 {
-	//return m_nextIndex++; // quand j'utilises pas le système de réutilisation d'indice, ya pas de soucis
-
 	uint32_t index;
 
     if (m_freeIndexes.empty())

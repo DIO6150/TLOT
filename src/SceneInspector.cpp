@@ -141,7 +141,7 @@ void SceneInspector::OpenMenu ()
 	ImGuiWindowFlags flags = ImGuiWindowFlags_None;
 
 	// Main body of the Demo window starts here.
-	if (!ImGui::Begin("Scene Editor", NULL, flags))
+	if (!ImGui::Begin("Scene Inspector", NULL, flags))
 	{
 		// Early out if the window is collapsed, as an optimization.
 		ImGui::End();

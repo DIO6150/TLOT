@@ -1,6 +1,6 @@
 ﻿CXX       := g++
 CXX_FLAGS := -std=c++23 -Wall -Wextra -Iinclude -Ideps -Ideps/glad/include -Ideps/imgui -Ideps/imgui/backend -Ideps/freeType/include
-CXX_FLAGS += -O0 -g
+CXX_FLAGS += -O3
 
 AR        := ar
 AR_FLAGS  := rcs

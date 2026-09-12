@@ -222,7 +222,8 @@ void Renderer::Render(SceneObject instance)
 	if (instance.geometryID == InvalidResource)
 		return;
 
-	m_toRender[instance.materialID].emplace_back(instance);
+	if (instance.isVisible)
+		m_toRender[instance.materialID].emplace_back(instance);
 }
 
 void Renderer::Render()
