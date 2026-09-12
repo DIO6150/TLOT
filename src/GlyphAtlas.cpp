@@ -3,7 +3,7 @@
 #include <OpenGL/TextureAtlas/GlyphAtlas.hpp>
 #include <Core/Logger.hpp>
 
-#include <glad/glad.h>
+#include "glad/glad.h"
 
 using namespace TLOT;
 

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <glad/glad.h>
+#include "glad/glad.h"
 
 #include <Core/Logger.hpp>
 

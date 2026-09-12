@@ -244,6 +244,9 @@ void Renderer::Render()
 		m_drawCommandDIBO[technique.material].Upload(commands, 0);
 		m_drawCommandDIBO[technique.material].Bind();
 
+		if (!m_programs.contains(technique.program))
+			continue;
+
 		ShaderProgram & program = m_programs.at(technique.program);
 		m_materialSSBO[technique.material].Bind();
 		program.Use();

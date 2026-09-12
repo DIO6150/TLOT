@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Logger.hpp>
-#include <glad/glad.h>
+#include "glad/glad.h"
 #include <stdint.h>
 
 #include <Geometry.hpp>

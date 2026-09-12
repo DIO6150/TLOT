@@ -93,6 +93,8 @@ namespace TLOT
 		void Destroy() override;
 		void Render() override;
 
+		void IsVisible(bool flag) {}
+
 	protected:
 		ResourceHandle m_normalFont;
 		ResourceHandle m_italicFont;
