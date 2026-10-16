@@ -66,7 +66,7 @@
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_allegro5.h"
-#include <stdint.h>     // uint64_t
+#include <stdint.h>     // ID64_t
 #include <cstring>      // memcpy
 
 // Allegro

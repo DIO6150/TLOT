@@ -109,7 +109,7 @@ struct ImGui_ImplSDL3_Data
     SDL_Window*             Window;
     SDL_WindowID            WindowID;
     SDL_Renderer*           Renderer;
-    Uint64                  Time;
+    ID64                  Time;
     char*                   ClipboardTextData;
     char                    BackendPlatformName[48];
 
@@ -856,8 +856,8 @@ void ImGui_ImplSDL3_NewFrame()
 
     // Setup time step (we could also use SDL_GetTicksNS() available since SDL3)
     // (Accept SDL_GetPerformanceCounter() not returning a monotonically increasing value. Happens in VMs and Emscripten, see #6189, #6114, #3644)
-    static Uint64 frequency = SDL_GetPerformanceFrequency();
-    Uint64 current_time = SDL_GetPerformanceCounter();
+    static ID64 frequency = SDL_GetPerformanceFrequency();
+    ID64 current_time = SDL_GetPerformanceCounter();
     if (current_time <= bd->Time)
         current_time = bd->Time + 1;
     io.DeltaTime = bd->Time > 0 ? (float)((double)(current_time - bd->Time) / (double)frequency) : (float)(1.0f / 60.0f);

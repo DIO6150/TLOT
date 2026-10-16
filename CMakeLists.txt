@@ -7,25 +7,33 @@ target_compile_features(${PROJECT_NAME}	PUBLIC cxx_std_26)
 #set(CMAKE_CXX_STANDARD 26)
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 target_sources(${PROJECT_NAME}
 	PRIVATE
 		# ENGINE
-		${CMAKE_CURRENT_SOURCE_DIR}/src/AssetManager.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/GeometryBuffer.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/GeometryLocation.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/GlyphAtlas.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/IndexLocation.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/InputManager.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/MaterialInstance.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/RenderableObject.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/RenderContext.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/Renderer.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/SceneInspector.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/ShaderProgram.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/ShaderSource.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/SSBO.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/Texture.cpp
-		${CMAKE_CURRENT_SOURCE_DIR}/src/TextureAtlas.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Application/Application.cpp
+
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Common/ID.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Common/Material.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Common/Transform.cpp
+
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Extensions/TetoModel.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Extensions/Camera.cpp
+
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/AssetManager/AssetManager.cpp
+
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/GeometryBuffer.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/GlyphAtlas.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/InstanceIndexBuffer.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/MaterialTemplate.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/MaterialTemplateSTD430.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/Renderer.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/ShaderProgram.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/ShaderStorageBuffer.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/TextureAtlas.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Private/Renderer/VAO.cpp
+
+		${CMAKE_CURRENT_SOURCE_DIR}/TetoEngine/Utils/Easing.cpp
 
 		# VENDORED
 		${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb/stb.c
@@ -47,7 +55,7 @@ target_include_directories(${PROJECT_NAME}
 		$<INSTALL_INTERFACE:include/imgui>
 		
 	PRIVATE
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendor/>
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/vendor/glad/include>

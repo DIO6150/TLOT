@@ -30,7 +30,7 @@ static const int APP_SRV_HEAP_SIZE = 64;
 struct FrameContext
 {
     ID3D12CommandAllocator*     CommandAllocator;
-    UINT64                      FenceValue;
+    ID64                      FenceValue;
 };
 
 // Simple free list based allocator
@@ -90,7 +90,7 @@ static ID3D12CommandQueue*          g_pd3dCommandQueue = nullptr;
 static ID3D12GraphicsCommandList*   g_pd3dCommandList = nullptr;
 static ID3D12Fence*                 g_fence = nullptr;
 static HANDLE                       g_fenceEvent = nullptr;
-static UINT64                       g_fenceLastSignaledValue = 0;
+static ID64                       g_fenceLastSignaledValue = 0;
 static IDXGISwapChain3*             g_pSwapChain = nullptr;
 static bool                         g_SwapChainTearingSupport = false;
 static bool                         g_SwapChainOccluded = false;

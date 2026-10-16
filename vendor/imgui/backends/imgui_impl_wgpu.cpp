@@ -778,13 +778,13 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
     WGPUVertexAttribute attribute_desc[] =
     {
 #if defined IMGUI_IMPL_WEBGPU_BACKEND_DAWN || defined IMGUI_IMPL_WEBGPU_BACKEND_WGVK
-        { nullptr, WGPUVertexFormat_Float32x2, (uint64_t)offsetof(ImDrawVert, pos), 0 },
-        { nullptr, WGPUVertexFormat_Float32x2, (uint64_t)offsetof(ImDrawVert, uv),  1 },
-        { nullptr, WGPUVertexFormat_Unorm8x4,  (uint64_t)offsetof(ImDrawVert, col), 2 },
+        { nullptr, WGPUVertexFormat_Float32x2, (ID64_t)offsetof(ImDrawVert, pos), 0 },
+        { nullptr, WGPUVertexFormat_Float32x2, (ID64_t)offsetof(ImDrawVert, uv),  1 },
+        { nullptr, WGPUVertexFormat_Unorm8x4,  (ID64_t)offsetof(ImDrawVert, col), 2 },
 #else
-        { WGPUVertexFormat_Float32x2, (uint64_t)offsetof(ImDrawVert, pos), 0 },
-        { WGPUVertexFormat_Float32x2, (uint64_t)offsetof(ImDrawVert, uv),  1 },
-        { WGPUVertexFormat_Unorm8x4,  (uint64_t)offsetof(ImDrawVert, col), 2 },
+        { WGPUVertexFormat_Float32x2, (ID64_t)offsetof(ImDrawVert, pos), 0 },
+        { WGPUVertexFormat_Float32x2, (ID64_t)offsetof(ImDrawVert, uv),  1 },
+        { WGPUVertexFormat_Unorm8x4,  (ID64_t)offsetof(ImDrawVert, col), 2 },
 #endif
     };
 
@@ -1133,7 +1133,7 @@ WGPUSurface ImGui_ImplWGPU_CreateWGPUSurfaceHelper(ImGui_ImplWGPU_CreateSurfaceI
         WGPUSurfaceSourceXlibWindow surface_src_xlib = {};
         surface_src_xlib.chain.sType = WGPUSType_SurfaceSourceXlibWindow;
         surface_src_xlib.display = info->RawDisplay;
-        surface_src_xlib.window = (uint64_t)info->RawWindow;
+        surface_src_xlib.window = (ID64_t)info->RawWindow;
         surface_descriptor.nextInChain = &surface_src_xlib.chain;
         surface = wgpuInstanceCreateSurface(info->Instance, &surface_descriptor);
     }

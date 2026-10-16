@@ -307,7 +307,7 @@ static WGPUAdapter RequestAdapter(wgpu::Instance& instance)
 
     // Synchronously (wait until) acquire Adapter
     wgpu::Future waitAdapterFunc { instance.RequestAdapter(&adapter_options, wgpu::CallbackMode::WaitAnyOnly, onRequestAdapter) };
-    wgpu::WaitStatus waitStatusAdapter = instance.WaitAny(waitAdapterFunc, UINT64_MAX);
+    wgpu::WaitStatus waitStatusAdapter = instance.WaitAny(waitAdapterFunc, ID64_MAX);
     IM_ASSERT(acquired_adapter != nullptr && waitStatusAdapter == wgpu::WaitStatus::Success && "Error on Adapter request");
     return acquired_adapter.MoveToCHandle();
 }
@@ -336,7 +336,7 @@ static WGPUDevice RequestDevice(wgpu::Instance& instance, wgpu::Adapter& adapter
 
     // Synchronously (wait until) get Device
     wgpu::Future waitDeviceFunc { adapter.RequestDevice(&device_desc, wgpu::CallbackMode::WaitAnyOnly, onRequestDevice) };
-    wgpu::WaitStatus waitStatusDevice = instance.WaitAny(waitDeviceFunc, UINT64_MAX);
+    wgpu::WaitStatus waitStatusDevice = instance.WaitAny(waitDeviceFunc, ID64_MAX);
     IM_ASSERT(acquired_device != nullptr && waitStatusDevice == wgpu::WaitStatus::Success && "Error on Device request");
     return acquired_device.MoveToCHandle();
 }

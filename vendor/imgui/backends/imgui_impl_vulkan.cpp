@@ -1926,7 +1926,7 @@ void ImGui_ImplVulkanH_CreateOrResizeWindow(VkInstance instance, VkPhysicalDevic
     vkGetDeviceQueue(device, queue_family, 0, &queue);
     err = vkQueueSubmit(queue, 1, &submit_info, fence);
     check_vk_result(err);
-    err = vkWaitForFences(device, 1, &fence, VK_TRUE, UINT64_MAX);
+    err = vkWaitForFences(device, 1, &fence, VK_TRUE, ID64_MAX);
     check_vk_result(err);
     err = vkResetFences(device, 1, &fence);
     check_vk_result(err);

@@ -73,14 +73,14 @@ typedef signed   long  int     khronos_ssize_t;
 
 #if defined(_MSC_VER) && !defined(__clang__)
 typedef signed   __int64       khronos_int64_t;
-typedef unsigned __int64       khronos_uint64_t;
+typedef unsigned __int64       khronos_ID64_t;
 #elif (defined(__clang__) || defined(__GNUC__)) && (__cplusplus < 201100)
 #include <stdint.h>
 typedef          int64_t       khronos_int64_t;
-typedef          uint64_t      khronos_uint64_t;
+typedef          ID64_t      khronos_ID64_t;
 #else
 typedef signed   long long     khronos_int64_t;
-typedef unsigned long long     khronos_uint64_t;
+typedef unsigned long long     khronos_ID64_t;
 #endif
 #endif  // __khrplatform_h_
 
@@ -388,7 +388,7 @@ GLAPI void APIENTRY glGenVertexArrays (GLsizei n, GLuint *arrays);
 #ifndef GL_VERSION_3_2
 #define GL_VERSION_3_2 1
 typedef struct __GLsync *GLsync;
-typedef khronos_uint64_t GLuint64;
+typedef khronos_ID64_t GLID64;
 typedef khronos_int64_t GLint64;
 #define GL_CONTEXT_COMPATIBILITY_PROFILE_BIT 0x00000002
 #define GL_CONTEXT_PROFILE_MASK           0x9126
@@ -425,7 +425,7 @@ typedef void (APIENTRYP PFNGLGETTRANSFORMFEEDBACKI_VPROC) (GLuint xfb, GLenum pn
 typedef void (APIENTRYP PFNGLGETTRANSFORMFEEDBACKI64_VPROC) (GLuint xfb, GLenum pname, GLuint index, GLint64 *param);
 #endif /* GL_VERSION_4_5 */
 #ifndef GL_ARB_bindless_texture
-typedef khronos_uint64_t GLuint64EXT;
+typedef khronos_ID64_t GLID64EXT;
 #endif /* GL_ARB_bindless_texture */
 #ifndef GL_ARB_cl_event
 struct _cl_context;
@@ -454,7 +454,7 @@ typedef void (APIENTRY  *GLVULKANPROCNV)(void);
 typedef khronos_int64_t GLint64EXT;
 #endif /* GL_NV_gpu_shader5 */
 #ifndef GL_NV_vertex_buffer_unified_memory
-typedef void (APIENTRYP PFNGLGETINTEGERUI64I_VNVPROC) (GLenum value, GLuint index, GLuint64EXT *result);
+typedef void (APIENTRYP PFNGLGETINTEGERUI64I_VNVPROC) (GLenum value, GLuint index, GLID64EXT *result);
 #endif /* GL_NV_vertex_buffer_unified_memory */
 #ifdef __cplusplus
 }

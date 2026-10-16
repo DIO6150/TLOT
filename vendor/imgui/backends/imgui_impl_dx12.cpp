@@ -106,7 +106,7 @@ struct ImGui_ImplDX12_Data
     DXGI_FORMAT                 DSVFormat;
     ID3D12DescriptorHeap*       pd3dSrvDescHeap;
     ID3D12Fence*                Fence;
-    UINT64                      FenceLastSignaledValue;
+    ID64                      FenceLastSignaledValue;
     HANDLE                      FenceEvent;
     UINT                        numFramesInFlight;
     bool                        tearingSupport;
@@ -357,7 +357,7 @@ void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandL
 
                 // Bind texture, Draw
                 D3D12_GPU_DESCRIPTOR_HANDLE texture_handle = {};
-                texture_handle.ptr = (UINT64)pcmd->GetTexID();
+                texture_handle.ptr = (ID64)pcmd->GetTexID();
                 command_list->SetGraphicsRootDescriptorTable(1, texture_handle);
                 command_list->DrawIndexedInstanced(pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset, pcmd->VtxOffset + global_vtx_offset, 0);
             }
@@ -372,7 +372,7 @@ static void ImGui_ImplDX12_DestroyTexture(ImTextureData* tex)
 {
     if (ImGui_ImplDX12_Texture* backend_tex = (ImGui_ImplDX12_Texture*)tex->BackendUserData)
     {
-        IM_ASSERT(backend_tex->hFontSrvGpuDescHandle.ptr == (UINT64)tex->TexID);
+        IM_ASSERT(backend_tex->hFontSrvGpuDescHandle.ptr == (ID64)tex->TexID);
         ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
         bd->InitInfo.SrvDescriptorFreeFn(&bd->InitInfo, backend_tex->hFontSrvCpuDescHandle, backend_tex->hFontSrvGpuDescHandle);
         SafeRelease(backend_tex->pTextureResource);
