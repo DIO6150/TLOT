@@ -55,7 +55,7 @@ public:
 	virtual void onHoverStart();
 	virtual void onHoverStop();
 
-	Type computeType();
+	Type hoverType();
 
 private:
 	Application * app_;
@@ -107,7 +107,7 @@ public:
 
 	void onHoverStart() override
 	{
-		if (computeType() == Hoverable::Type::Medium)
+		if (hoverType() == Hoverable::Type::Medium)
 			cardTooltip_.show();
 	}
 
@@ -135,6 +135,89 @@ public:
 		updateMaterial();
 	}
 };
+
+/*
+class IEventListener
+{
+public:
+	virtual void onWindowRezize(glm::vec2 oldSize, glm::vec2 newSize) {}
+};
+
+class EventController
+{
+public:
+	EventController(IEventListener * listener)
+		: listener_ {listener}
+	{
+		
+	}
+
+protected:
+	void cancelEvent()
+	{
+
+	}
+
+private:
+	IEventListener * listener_;
+};
+
+
+class ApplicationEventListener : public IEventListener, public EventController
+{
+public:
+	ApplicationEventListener()
+		: EventController{this}
+	{
+		
+	}
+
+	void onWindowRezize(glm::vec2 oldSize, glm::vec2 newSize) override
+	{
+		std::cout
+		<< "old size: "   << oldSize.x << ", " << oldSize.y
+		<< "; new size: " << newSize.x << ", " << newSize.y
+		<< std::endl;
+
+		cancelEvent();
+	}
+};
+
+class ApplicationPrototype /// think of this as an Application class
+{
+protected:
+	uint32_t registerEventListener(IEventListener * listener)
+	{
+		listenerList_.emplace(nextListenerID_++, listener);
+	}
+
+	void unregisterEventListener(uint32_t listenerID)
+	{
+		listenerList_.erase(listenerID);
+	}
+
+	void init()
+	{
+		glfwSet
+	}
+
+	void update()
+	{
+		while(1)
+		{
+			//poll glfwEvents
+
+			//update app
+
+			//render app
+		}
+	}
+
+private:
+	std::map<uint32_t, IEventListener *> listenerList_;
+	uint32_t nextListenerID_ = 0;
+};
+*/
 
 class Scopalatro: public Application
 {
@@ -192,13 +275,13 @@ class Scopalatro: public Application
 		);
 
 		auto enemyMesh = loadMesh("mesh/enemy", quadGeometry, cardMaterial);
-		auto cardMesh  = loadMesh("mesh/card", quadGeometry, enemyMaterial);
+		auto cardMesh  = loadMesh("mesh/card" , quadGeometry, enemyMaterial);
 		
 		/* ------------------------------------------- */
 
 		registerTexture(badaliscImage);
-		auto enemyProgram = createProgram(enemyVertex, enemyFragment);
-		auto cardProgram = createProgram(cardVertex, cardFragment);
+		auto enemyProgram = generateProgram(enemyVertex, enemyFragment);
+		auto cardProgram = generateProgram(cardVertex, cardFragment);
 
 		Technique enemyTechnique;
 		enemyTechnique.material = enemyMaterial;

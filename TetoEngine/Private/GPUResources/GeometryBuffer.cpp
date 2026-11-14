@@ -1,7 +1,7 @@
 
 #include <glm/glm.hpp>
 
-#include <TetoEngine/Private/Renderer/GeometryBuffer.hpp>
+#include <TetoEngine/Private/GPUResources/GeometryBuffer.hpp>
 
 using namespace TetoEngine;
 

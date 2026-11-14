@@ -6,7 +6,7 @@
 
 using namespace TetoEngine;
 
-void MaterialTemplate::addUniform(std::string key, UniformType type)
+void MaterialTemplate::addProperty(std::string key, UniformType type)
 {
 	size_t size      = getSize     (type);
 	size_t alignment = getAlignment(type);
@@ -27,14 +27,14 @@ std::vector<UniformLayout> const & MaterialTemplate::layout() const
 	return uniforms_;
 }
 
-UniformLayout const * MaterialTemplate::uniform(std::string key) const
+std::optional<UniformLayout> MaterialTemplate::property(std::string key) const
 {
 	for (auto & param : uniforms_)
 	{
-		if (param.name == key) return &param;
+		if (param.name == key) return param;
 	}
 
-	return nullptr;
+	return std::nullopt;
 }
 
 size_t MaterialTemplate::size() const

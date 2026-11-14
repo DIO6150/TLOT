@@ -16,7 +16,7 @@ namespace TetoEngine
 	public:
 		void OpenMenu();
 		void PreCache();
-		void SetRenderer(Renderer * renderer)
+		void SetRenderer(InstanceRenderer * renderer)
 		{
 			renderer_ = renderer;
 		}
@@ -30,7 +30,7 @@ namespace TetoEngine
 
 
 		std::map<ID64, uint32_t> m_textures;
-		Renderer * renderer_ = nullptr;
+		InstanceRenderer * renderer_ = nullptr;
 
 		std::vector<IObject *> m_objectInfos;
 	};

@@ -28,8 +28,9 @@ ID64 AssetManager::loadMaterial(MaterialLayout layout)
 
 	auto material = materialView.get();
 
-	material->uniforms_ = layout.uniforms_;
-	material->textures_ = layout.textures_;
+	material->shader = layout.shader;
+	material->shaderProperties   = layout.shaderProperties;
+	material->instanceProperties = layout.instanceProperties;
 
 	return handle;
 }

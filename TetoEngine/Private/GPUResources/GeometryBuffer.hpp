@@ -4,7 +4,7 @@
 
 #include <TetoEngine/Common/ID.hpp>
 
-#include <TetoEngine/Private/Renderer/Buffer.hpp>
+#include <TetoEngine/Private/GPUResources/OpenGLBuffer.hpp>
 #include <TetoEngine/Private/Renderer/VAO.hpp>
 
 #include <TetoEngine/Resource/Geometry.hpp>
@@ -39,8 +39,8 @@ namespace TetoEngine
 		};
 
 		VAO vao_;
-		Buffer<GL_ARRAY_BUFFER>         vbo_;
-		Buffer<GL_ELEMENT_ARRAY_BUFFER> ebo_;
+		OpenGLBuffer<GL_ARRAY_BUFFER>         vbo_;
+		OpenGLBuffer<GL_ELEMENT_ARRAY_BUFFER> ebo_;
 
 		std::map<ID64, GeometryData> geometry_;
 		std::map<ID64, Geometry>     pendingGeometry_;

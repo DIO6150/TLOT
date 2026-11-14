@@ -4,6 +4,7 @@
 
 #include <TetoEngine/Common/Transform.hpp>
 #include <TetoEngine/Common/Material.hpp>
+#include <TetoEngine/Common/Quad.hpp>
 
 #include <TetoEngine/Renderer/TRID.hpp>
 
@@ -43,12 +44,12 @@ namespace TetoEngine
 		void setParent(TetoModel * parent); // useful for computing transformation
 
 	protected:
-		std::pair<uint32_t, TIRID> pushMesh(std::string name);
+		std::pair<uint32_t, TetoInstance> pushMesh(std::string name);
 		
 		Transform & getTransform(uint32_t index);
 		Material  & getMaterial (uint32_t index);
 		
-		glm::vec4 getTexture(std::string name); // returns the handle of the texture in the renderer not in the assetManager
+		std::optional<Quad> getTexture(std::string name); // returns the handle of the texture in the renderer not in the assetManager
 		
 		void updateMaterial();
 		void updateTransform();
@@ -61,7 +62,7 @@ namespace TetoEngine
 
 		Transform transform_;
 
-		std::vector<TIRID>     meshList_;
+		std::vector<TetoInstance> meshList_;
 		std::vector<Transform> transformList_;
 		std::vector<Material>  materialList_;
 

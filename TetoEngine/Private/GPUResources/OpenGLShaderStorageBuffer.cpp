@@ -1,4 +1,4 @@
-#include <TetoEngine/Private/Renderer/ShaderStorageBuffer.hpp>
+#include <TetoEngine/Private/GPUResources/OpenGLShaderStorageBuffer.hpp>
 
 using namespace TetoEngine;
 

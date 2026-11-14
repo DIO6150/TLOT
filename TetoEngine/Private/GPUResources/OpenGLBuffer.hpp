@@ -6,21 +6,17 @@
 
 namespace TetoEngine
 {
-	template<GLenum BufferType>
-	class Buffer
+	class OpenGLBuffer
 	{
 	public:
-		Buffer()
+		OpenGLBuffer(GLenum bufferType, GLenum usage, size_t size)
+			: bufferType_{bufferType}
+			, usage_{usage}
+			, size_{size}
 		{
 			glGenBuffers(1, &handle_);
-		}
 
-		void create(GLenum usage, size_t size)
-		{
-			usage_ = usage;
-			size_  = size;
-			
-			glBindBuffer(BufferType, handle_);
+			glBindBuffer(bufferType_, handle_);
 			glNamedBufferData(handle_, size_, NULL, usage_);
 		}
 
@@ -38,17 +34,19 @@ namespace TetoEngine
 
 		void bind()
 		{
-			glBindBuffer(BufferType, handle_);
+			glBindBuffer(bufferType_, handle_);
 		}
 
 		void unbind()
 		{
-			glBindBuffer(BufferType, 0);
+			glBindBuffer(bufferType_, 0);
 		}
 
 	private:
-		GLenum usage_;
-		size_t size_ = 0;	
 		uint32_t handle_;
+		
+		GLenum bufferType_;
+		GLenum usage_;
+		size_t size_ = 0;
 	};
 }

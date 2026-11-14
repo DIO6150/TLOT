@@ -6,7 +6,7 @@ namespace TetoEngine
 {
 	using TRID = ID64; // TetoRendererID
 
-	struct TIRID // Teto Instance Renderer ID
+	struct TetoInstance // Teto Instance Renderer ID
 	{
 		ID64 geometryID;
 		ID64 materialID;

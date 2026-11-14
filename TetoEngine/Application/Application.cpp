@@ -4,6 +4,7 @@
 #include <TetoEngine/Private/AssetManager/AssetManager.hpp>
 #include <TetoEngine/Private/Renderer/Renderer.hpp>
 #include <TetoEngine/Private/Renderer/MaterialTemplateSTD430.hpp>
+#include <TetoEngine/Private/GPUResources/GPUResourceManager.hpp>
 #include <TetoEngine/Private/Window/Window.hpp>
 
 #include <TetoEngine/Utils/Logger.hpp>
@@ -17,10 +18,6 @@ using namespace TetoEngine;
 struct Application::Impl
 {
 	Window window;
-	std::map<std::string, ID64> resourceCache;
-	AssetManager assetManager;
-	Renderer renderer;
-
 	std::string title = "Application";
 	uint32_t width    = 800;
 	uint32_t height   = 800;
@@ -29,7 +26,23 @@ struct Application::Impl
 	{
 		window.init(width, height, title, false);
 	}
+
+
+	std::map<std::string, ID64> resourceCache;
+	AssetManager assetManager;
+
+
+
+	InstanceRenderer renderer;
+
+	GPUResourceManager gpuResourceManager;
 };
+
+Application::Application()
+	: impl_ {}
+{
+
+}
 
 void Application::run()
 {
@@ -221,9 +234,9 @@ TRID Application::createFont(ID64 font)
 	impl_->renderer.createFont(font);
 }
 
-TRID Application::createProgram(ID64 vertexHandle, ID64 fragmentHandle)
+TRID Application::generateProgram(ID64 vertexHandle, ID64 fragmentHandle)
 {
-	impl_->renderer.createProgram(vertexHandle, fragmentHandle);
+	impl_->renderer.generateProgram(vertexHandle, fragmentHandle);
 }
 
 Material Application::generateMaterial(ID64 handle)
@@ -231,32 +244,32 @@ Material Application::generateMaterial(ID64 handle)
 	impl_->renderer.generateMaterial(handle);
 }
 
-TIRID Application::instanciate(ID64 meshHandle, glm::mat4 model, Material material)
+TetoInstance Application::instanciate(ID64 meshHandle, glm::mat4 model, Material material)
 {
 	impl_->renderer.instanciate(meshHandle, model, material);
 }
 
-void Application::updateInstance(TIRID instance, glm::mat4 model, Material material)
+void Application::updateInstance(TetoInstance instance, glm::mat4 model, Material material)
 {
 	impl_->renderer.updateInstance(instance, model, material);
 }
 
-void Application::updateInstance(TIRID instance, glm::mat4 model)
+void Application::updateInstance(TetoInstance instance, glm::mat4 model)
 {
 	impl_->renderer.updateInstance(instance, model);
 }
 
-void Application::updateInstance(TIRID instance, Material material)
+void Application::updateInstance(TetoInstance instance, Material material)
 {
 	impl_->renderer.updateInstance(instance, material);
 }
 
-void Application::drawInstance(TIRID instance)
+void Application::drawInstance(TetoInstance instance)
 {
 	impl_->renderer.drawInstance(instance);
 }
 
-void Application::killInstance(TIRID instance)
+void Application::killInstance(TetoInstance instance)
 {
 	impl_->renderer.killInstance(instance);
 }

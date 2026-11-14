@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include <TetoEngine/Utils/Logger.hpp>
+
 using namespace TetoEngine;
 
 TextureAtlas::TextureAtlas(Application * app, uint32_t width, uint32_t height, uint32_t depth)
@@ -24,31 +26,18 @@ TextureAtlas::~TextureAtlas()
 
 unsigned int TextureAtlas::handle() const
 {
-	return(handle_);
+	return handle_;
 }
 
 void TextureAtlas::insertImage(ID64 handle)
 {
 	auto imageView = app_->getImage(handle);
-	if (!imageView) return;
-	auto image = imageView.get();
-
-	if (textures_.contains(handle))
+	if (!imageView)
 	{
-		// do soemthing
 		return;
 	}
 
 	PendingImage pending {imageView};
-
-	for(auto const & quad : free_)
-	{
-		
-	}
-
-	pending.x;
-	pending.y;
-
 	pendingImages_.push_back(pending);
 
 	dirty_ = true;
@@ -65,24 +54,25 @@ void TextureAtlas::generate()
 		
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 7);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 7);
 		
-		glTexStorage2D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width_, height_);
+		glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, width_, height_, depth_);
 	}
 
 	glBindTexture(GL_TEXTURE_2D_ARRAY, handle_);
 
-	for(const auto & pending : pendingImages_)
-	{	
+	std::vector<std::pair<PendingImage, Quad>> quads = generateQuads();
+	for(const auto & [pendingImage, quad] : quads)
+	{
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
 			0,
-			pending.x, pending.y, pending.depth,
-			pending.width, pending.height,
+			quad.x, quad.y, quad.d,
+			quad.w, quad.h, 1,
 			GL_RGBA,
 			GL_UNSIGNED_BYTE,
-			pending.data.data()
+			pendingImage.data.data()
 		);
 	}
 
@@ -98,4 +88,88 @@ uint32_t TextureAtlas::width() const
 uint32_t TextureAtlas::height() const
 {
 	return height_;
+}
+
+inline bool canFit(PendingImage image, Quad quad)
+{
+	return quad.w >= static_cast<float>(image.width) && quad.h >= static_cast<float>(image.height);
+}
+
+inline Quad fit(PendingImage image, Quad quad)
+{
+	quad.w = image.width;
+	quad.h = image.height;
+
+	return quad;
+}
+
+std::vector<Quad> cutTile(Quad base, Quad cut)
+{
+	std::vector<Quad> result;
+
+	float w1, h1, w2, h2, x1, y1, x2, y2;
+
+	w1 = base.w - cut.w;
+	w2 = base.w;
+
+	h1 = base.h - cut.h;
+	h2 = cut.h;
+
+	x1 = base.x + cut.w;
+	y1 = base.y;
+
+	x2 = base.x;
+	y2 = base.y + cut.h;
+
+	if (w1 != 0.0f)
+	{
+		result.emplace_back(x1, y1, w1, h2, 1);
+	}
+
+	if (h1 != 0.0f)
+	{
+		result.emplace_back(x2, y2, w2, h1, 1);
+	}
+
+	return result;
+}
+
+std::optional<Quad> TextureAtlas::fitCut(PendingImage image)
+{
+	bool found = false;
+	for (auto const & candidate : free_)
+	{
+		found = canFit(image, candidate);
+
+		if (found)
+		{
+			Quad fitted = fit(image, candidate);
+
+			auto tiles = cutTile(candidate, fitted);
+			free_.insert(free_.end(), tiles.begin(), tiles.end());
+
+			return fitted;
+		}
+	}
+
+	return std::nullopt;
+}
+
+std::vector<std::pair<PendingImage, Quad>> TextureAtlas::generateQuads()
+{
+	std::vector<std::pair<PendingImage, Quad>> result;
+
+	for (auto const & pending : pendingImages_)
+	{
+		auto opt = fitCut(pending);
+		if (!opt)
+		{
+			Logger::log(LogLevel::Warning, "Couldn't fit image in atlas: Skipping...");
+			continue;
+		}
+
+		result.emplace_back(pending, opt.value());
+	}
+
+	return result;
 }

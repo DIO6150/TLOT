@@ -11,7 +11,8 @@ namespace TetoEngine
 {
 	struct MaterialLayout
 	{
-		std::vector<std::pair<std::string, UniformType>> uniforms_;
-		std::vector<std::string> textures_;
+		std::pair<std::string, std::string> shader;
+		std::vector<std::pair<std::string, UniformType>> shaderProperties;
+		std::vector<std::pair<std::string, UniformType>> instanceProperties;
 	};
 }

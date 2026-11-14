@@ -6,14 +6,14 @@
 
 using namespace TetoEngine;
 
-Renderer::Renderer(Application * app)
+InstanceRenderer::InstanceRenderer(Application * app)
 	: app_ {app}
 	, textureAtlas_ {app, 2048, 2048, 16}
 {
 	init();
 }
 
-void Renderer::init()
+void InstanceRenderer::init()
 {
 	geometryBuffer_.create();
 	indexSSBO_ .create(GL_DYNAMIC_DRAW, 0, 10000000);
@@ -24,19 +24,19 @@ void Renderer::init()
 	ortho_ = glm::ortho(0.0f, static_cast<float>(viewport.width_), 0.0f, static_cast<float>(viewport.height_), -10.0f, 10.0f);
 }
 
-void Renderer::sync()
+void InstanceRenderer::sync()
 {
 	geometryBuffer_.upload();
 	textureAtlas_  .generate();
 	fontAtlas_     .generate();
 }
 
-TRID Renderer::getProgramHash(ResourceView<ShaderSource> vertex, ResourceView<ShaderSource> fragment)
+inline TRID getProgramHash(ResourceView<ShaderSource> vertex, ResourceView<ShaderSource> fragment)
 {
 	return generate_ordered_set_hash({vertex.handle(), fragment.handle()});
 }
 
-FrameRenderData Renderer::buildCommands(std::map<ID64, std::vector<TIRID>> const & objects)
+FrameRenderData InstanceRenderer::buildCommands(std::map<ID64, std::vector<TetoInstance>> const & objects)
 {
 	FrameRenderData renderData;
 	renderData.instanceDataSSBO.reserve(objects.size());
@@ -48,7 +48,7 @@ FrameRenderData Renderer::buildCommands(std::map<ID64, std::vector<TIRID>> const
 
 		// 1) Culling
 		// TODO : implement frustum culling
-		std::vector<const TIRID*> visibleObjects;
+		std::vector<const TetoInstance*> visibleObjects;
 		visibleObjects.reserve(sceneObjects.size());
 
 		for (const auto& obj : sceneObjects)
@@ -63,7 +63,7 @@ FrameRenderData Renderer::buildCommands(std::map<ID64, std::vector<TIRID>> const
 
 		// 2) Sort by geometry
 		std::sort(visibleObjects.begin(), visibleObjects.end(), 
-			[] (const TIRID* a, const TIRID* b)
+			[] (const TetoInstance* a, const TetoInstance* b)
 			{
 				return a->geometryID < b->geometryID;
 			}
@@ -72,7 +72,7 @@ FrameRenderData Renderer::buildCommands(std::map<ID64, std::vector<TIRID>> const
 		// 3) Command Creation and SSBO filling
 		ID64 currentGeometryID = ~0;
 		
-		for (const TIRID* obj : visibleObjects)
+		for (const TetoInstance* obj : visibleObjects)
 		{
 			if (obj->geometryID != currentGeometryID)
 			{
@@ -101,7 +101,7 @@ FrameRenderData Renderer::buildCommands(std::map<ID64, std::vector<TIRID>> const
 	return renderData;
 }
 
-void Renderer::createMaterialBuffer(ID64 handle)
+void InstanceRenderer::createMaterialBuffer(ID64 handle)
 {
 	if (registeredMaterial_.contains(handle)) return;
 
@@ -111,24 +111,24 @@ void Renderer::createMaterialBuffer(ID64 handle)
 	registeredMaterial_.emplace(handle);
 }
 
-void Renderer::registerTechnique(Technique technique)
+void InstanceRenderer::registerTechnique(Technique technique)
 {
 	techniqueList_.push_back(technique);
 
 	createMaterialBuffer(technique.material);
 }
 
-TRID Renderer::registerTexture(ID64 handle)
+TRID InstanceRenderer::registerTexture(ID64 handle)
 {
 	return TRID();
 }
 
-TRID Renderer::createFont(ID64 handle)
+TRID InstanceRenderer::createFont(ID64 handle)
 {
 	return TRID();
 }
 
-TRID Renderer::createProgram(ID64 vertexHandle, ID64 fragmentHandle)
+TRID InstanceRenderer::generateProgram(ID64 vertexHandle, ID64 fragmentHandle)
 {
 	auto vertexView   = app_->getShaderSource(vertexHandle);
 	auto fragmentView = app_->getShaderSource(fragmentHandle);
@@ -138,52 +138,70 @@ TRID Renderer::createProgram(ID64 vertexHandle, ID64 fragmentHandle)
 		return InvalidID;
 	}
 
+	TRID handle = getProgramHash(vertexView, fragmentView);
+
+	if (programList_.contains(handle))
+	{
+		return handle;
+	}
+
 	ShaderProgram program;
 	program.compileVertex  (vertexView  .get()->source_);
 	program.compileFragment(fragmentView.get()->source_);
 	program.link ();
 	
-	TRID handle = getProgramHash(vertexView, fragmentView);
 	programList_.emplace(handle, std::move(program));
 
 	return handle;
 }
 
-Material Renderer::generateMaterial(ID64 handle)
+std::optional<Material> InstanceRenderer::generateMaterial(ID64 handle)
 {
+	auto materialView = app_->getMaterialLayout(handle);
+	if (!materialView) return std::nullopt;
+	
+	std::polymorphic<MaterialTemplate> instanceMaterialTemplate { std::in_place_type<MaterialTemplateSTD430> };
+
 	if (materialTemplates_.contains(handle))
 	{
-		return Material { materialTemplates_.at(handle), handle };
+		std::polymorphic<MaterialTemplate> contained { materialTemplates_.at(handle) };
+		instanceMaterialTemplate.swap(contained);
 	}
-
-	auto materialView = app_->getMaterialLayout(handle);
-	if (!materialView) return Material {};
-	
-	auto std430 = std::make_shared<MaterialTemplateSTD430>();
-	for (auto uniform : materialView->uniforms_)
+	else
 	{
-		std430->addUniform(uniform.first, uniform.second);
+		for (auto uniform : materialView->instanceProperties)
+		{
+			instanceMaterialTemplate->addProperty(uniform.first, uniform.second);
+		}
+		
+		materialTemplates_.emplace(handle, instanceMaterialTemplate);
+		createMaterialBuffer(handle);
 	}
 
-	materialTemplates_.emplace(handle, std430);
-	createMaterialBuffer(handle);
+	auto vertexHandle   = app_->pullResource(materialView->shader.first);
+	auto fragmentHandle = app_->pullResource(materialView->shader.second);
 
-	return Material { std430, handle };
+	if (vertexHandle == InvalidID || fragmentHandle == InvalidID) return std::nullopt;
+
+	auto programHandle = generateProgram(vertexHandle, fragmentHandle);
+	auto program = programList_.at(programHandle);
+	
+	return Material { instanceMaterialTemplate, program };
 }
 
-TIRID Renderer::instanciate(ID64 handle)
+TetoInstance InstanceRenderer::instanciate(ID64 handle)
 {
 	auto mesh = app_->getMesh(handle);
-	if (!mesh) return TIRID { .geometryID = InvalidID };
+	if (!mesh) return TetoInstance { .geometryID = InvalidID };
 
 	auto geometry = app_->getGeometry      (mesh->geometry_);
 	auto material = app_->getMaterialLayout(mesh->material_);
-	if(!geometry || !material) return TIRID { .geometryID = InvalidID };
+	if(!geometry || !material) return TetoInstance { .geometryID = InvalidID };
 	
 	createMaterialBuffer(material.handle());
 	geometryBuffer_.registerGeometry(geometry.handle(), geometry.get());
 	
-	TIRID object;
+	TetoInstance object;
 	object.geometryID    = geometry.handle();
 	object.materialID    = material.handle();
 	object.indexCount    = geometryBuffer_.getIndexCount (geometry.handle());
@@ -195,42 +213,42 @@ TIRID Renderer::instanciate(ID64 handle)
 	return object;
 }
 
-TIRID Renderer::instanciate(ID64 handle, glm::mat4 model, Material material)
+TetoInstance InstanceRenderer::instanciate(ID64 handle, glm::mat4 model, Material material)
 {
 	auto object = instanciate(handle);
 
 	matrixSSBO_.upload(model, object.matrixIndex * sizeof(glm::mat4));
 	materialSSBO_
 		.at(object.materialID)
-		.upload(material.raw(), object.materialIndex * material.size());
+		.upload(material.rawProperties(), object.materialIndex * material.propertiesSize());
 
 	return object;
 }
 
-void Renderer::updateInstance(TIRID instance, glm::mat4 model, Material material)
+void InstanceRenderer::updateInstance(TetoInstance instance, glm::mat4 model, Material material)
 {
 	if (instance.geometryID == InvalidID)
 		return;
 
 	matrixSSBO_.upload(model, instance.matrixIndex * sizeof(glm::mat4));
-	materialSSBO_[instance.materialID].upload(material.raw(), instance.materialIndex * material.size());
+	materialSSBO_[instance.materialID].upload(material.rawProperties(), instance.materialIndex * material.propertiesSize());
 }
 
-void Renderer::updateInstance(TIRID instance, glm::mat4 model)
+void InstanceRenderer::updateInstance(TetoInstance instance, glm::mat4 model)
 {
 	if (instance.geometryID == InvalidID) return;
 
 	matrixSSBO_.upload(model, instance.matrixIndex * sizeof(glm::mat4));
 }
 
-void Renderer::updateInstance(TIRID instance, Material material)
+void InstanceRenderer::updateInstance(TetoInstance instance, Material material)
 {
 	if (instance.geometryID == InvalidID) return;
 
-	materialSSBO_[instance.materialID].upload(material.raw(), instance.materialIndex * material.size());
+	materialSSBO_[instance.materialID].upload(material.rawProperties(), instance.materialIndex * material.propertiesSize());
 }
 
-void Renderer::drawInstance(TIRID instance)
+void InstanceRenderer::drawInstance(TetoInstance instance)
 {
 	if (instance.geometryID == InvalidID) return;
 	if (!instance.visible_) return;
@@ -238,7 +256,7 @@ void Renderer::drawInstance(TIRID instance)
 	renderList_[instance.materialID].emplace_back(instance);
 }
 
-void Renderer::killInstance(TIRID & instance)
+void InstanceRenderer::killInstance(TetoInstance & instance)
 {
 	if (instance.geometryID == InvalidID)
 		return;
@@ -291,7 +309,7 @@ void setup_technique(Technique & technique)
 	glFrontFace(tatgle(technique.frontFace));
 }
 
-void Renderer::render()
+void InstanceRenderer::render()
 {
 	sync();
 

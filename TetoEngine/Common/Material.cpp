@@ -6,82 +6,96 @@
 
 using namespace TetoEngine;
 
-struct Material::Impl
+template<class T>
+inline void setProperty(std::string key, T value, std::polymorphic<MaterialTemplate> const & instanceTemplate, uint8_t * instanceRaw)
 {
-	Impl(std::shared_ptr<MaterialTemplate> materialTemplate, ID64 handle)
-		: template_ {materialTemplate}
-		, handle_ {handle}
-	{
-		raw_.resize(template_->size());
-	}
+	auto param = instanceTemplate.property(key);
 
-	template<class T>
-	void setUniform(std::string key, T value)
-	{
-		auto param = template_.uniform(key);
-	
-		if (!param) return;
-		if (sizeof(T) > param->size_) return;
-	
-		memcpy(raw_.data() + param->offset, &value, sizeof(T));
-	}
+	if (!param) return;
+	if (sizeof(T) > param->size_) return;
 
-	std::shared_ptr<MaterialTemplate> template_;
-	ID64 handle_;
-	std::vector<uint8_t> raw_;
-};
+	memcpy(instanceRaw.data() + param->offset, &value, sizeof(T));
+}
 
-Material::Material(std::shared_ptr<MaterialTemplate> materialTemplate, ID64 handle)
+Material::Material(std::polymorphic<MaterialTemplate> & materialTemplate, ShaderProgram & program)
+	: instanceTemplate_{std::move(materialTemplate)}
+	, program_         {program}
 {
-	impl_ = std::make_shared<Material::Impl>(materialTemplate, handle);
+	
 }
 
 void Material::setTexture(std::string key, glm::vec4 textureCoords)
 {
-	impl_->setUniform<glm::vec4>(key, textureCoords);
+	setProperty<glm::vec4>(key, textureCoords, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniform1i(std::string key, int value)
+void Material::setInstanceProperty(std::string key, int value)
 {
-	impl_->setUniform<int>(key, value);
+	setProperty<int>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniform1f(std::string key, float value)
+void Material::setInstanceProperty(std::string key, float value)
 {
-	impl_->setUniform<float>(key, value);
+	setProperty<float>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniformVec2(std::string key, glm::vec2 value)
+void Material::setInstanceProperty(std::string key, glm::vec2 value)
 {
-	impl_->setUniform<glm::vec2>(key, value);
+	setProperty<glm::vec2>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniformVec3(std::string key, glm::vec3 value)
+void Material::setInstanceProperty(std::string key, glm::vec3 value)
 {
-	impl_->setUniform<glm::vec3>(key, value);
+	setProperty<glm::vec3>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniformVec4(std::string key, glm::vec4 value)
+void Material::setInstanceProperty(std::string key, glm::vec4 value)
 {
-	impl_->setUniform<glm::vec4>(key, value);
+	setProperty<glm::vec4>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-void Material::setUniformMat4(std::string key, glm::mat4 value)
+void Material::setInstanceProperty(std::string key, glm::mat4 value)
 {
-	impl_->setUniform<glm::mat4>(key, value);
+	setProperty<glm::mat4>(key, value, instanceTemplate_, rawProperties_.data());
 }
 
-std::vector<uint8_t> const & Material::raw() const
+void Material::setShaderProperty(std::string key, int value)
 {
-	return impl_->raw_;
+
 }
 
-size_t const Material::size() const
+void Material::setShaderProperty(std::string key, float value)
 {
-	return impl_->raw_.size();
+
 }
 
-ID64 Material::handle() const
+void Material::setShaderProperty(std::string key, glm::vec2 value)
 {
-	return impl_->handle_;
+
+}
+
+void Material::setShaderProperty(std::string key, glm::vec3 value)
+{
+
+}
+
+void Material::setShaderProperty(std::string key, glm::vec4 value)
+{
+
+}
+
+void Material::setShaderProperty(std::string key, glm::mat4 value)
+{
+
+}
+
+
+std::vector<uint8_t> const & Material::rawProperties() const
+{
+	return rawProperties_;
+}
+
+size_t const Material::propertiesSize() const
+{
+	return rawProperties_.size();
 }

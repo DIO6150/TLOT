@@ -7,10 +7,10 @@ namespace TetoEngine
 	class MaterialTemplate: public IMaterialTemplate
 	{
 	public:
-		void addUniform(std::string key, UniformType type);
+		void addProperty(std::string key, UniformType type);
 
 		std::vector<UniformLayout> const & layout() const;
-		UniformLayout const * uniform(std::string key) const;
+		std::optional<UniformLayout> property(std::string key) const;
 		size_t size() const;
 
 	private:

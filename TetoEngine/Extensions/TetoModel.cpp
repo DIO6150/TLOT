@@ -140,7 +140,7 @@ void TetoModel::setParent(TetoModel * parent)
 	parent_ = parent;
 }
 
-std::pair<uint32_t, TIRID> TetoModel::pushMesh(std::string name)
+std::pair<uint32_t, TetoInstance> TetoModel::pushMesh(std::string name)
 {
 	auto handle   = app_->pullResource(name);
 	auto meshView = app_->getMesh(handle);
@@ -170,12 +170,12 @@ Material  & TetoModel::getMaterial(uint32_t index)
 	return materialList_.at(index);
 }
 
-glm::vec4 TetoModel::getTexture(std::string name)
+std::optional<Quad> TetoModel::getTexture(std::string name)
 {
 	auto handle    = app_->pullResource(name);
 	auto imageView = app_->getImage(handle);
 
-	if (!imageView) return -1;
+	if (!imageView) return std::nullopt;
 
 	return app_->registerTexture(handle);
 }

@@ -4,6 +4,7 @@
 #include <string>
 
 #include <TetoEngine/Common/ID.hpp>
+#include <TetoEngine/Private/GPUResources/ShaderProgram.hpp>
 
 #include <glm/glm.hpp>
 
@@ -16,27 +17,35 @@ namespace TetoEngine
 	public:
 		void setTexture(std::string key, glm::vec4 textureCoords);
 
-		void setUniform1i(std::string key, int value);
-		void setUniform1f(std::string key, float value);
+		void setInstanceProperty(std::string key, int value);
+		void setInstanceProperty(std::string key, float value); // im not sure compiler can do the difference between a float and an int
+		void setInstanceProperty(std::string key, glm::vec2 value);
+		void setInstanceProperty(std::string key, glm::vec3 value);
+		void setInstanceProperty(std::string key, glm::vec4 value);
+		void setInstanceProperty(std::string key, glm::mat4 value);
 
-		void setUniformVec2(std::string key, glm::vec2 value);
-		void setUniformVec3(std::string key, glm::vec3 value);
-		void setUniformVec4(std::string key, glm::vec4 value);
-		void setUniformMat4(std::string key, glm::mat4 value);
+		void setShaderProperty(std::string key, int value);
+		void setShaderProperty(std::string key, float value);
+		void setShaderProperty(std::string key, glm::vec2 value);
+		void setShaderProperty(std::string key, glm::vec3 value);
+		void setShaderProperty(std::string key, glm::vec4 value);
+		void setShaderProperty(std::string key, glm::mat4 value);
 
-		std::vector<uint8_t> const & raw() const;
-		size_t const size() const;
+		std::vector<uint8_t> const & rawProperties() const;
+		size_t const propertiesSize() const;
 
 		Material() = default;
 		
 	private:
-		Material(std::shared_ptr<MaterialTemplate> materialTemplate, ID64 handle);
-		ID64 handle() const;
+		Material(std::polymorphic<MaterialTemplate> & materialTemplate, ShaderProgram & program);
 
 	private:
-		struct Impl;
-		std::shared_ptr<Impl> impl_;
+		std::polymorphic<MaterialTemplate> instanceTemplate_;
+		ShaderProgram program_;
 
-		friend class Renderer;
+		std::vector<uint8_t> rawProperties_;
+
+	private:
+		friend class InstanceRenderer;
 	};
 }

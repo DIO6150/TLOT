@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 
-#include <TetoEngine/Private/Renderer/ShaderProgram.hpp>
+#include <TetoEngine/Private/GPUResources/ShaderProgram.hpp>
 #include <TetoEngine/Utils/Logger.hpp>
 
 #include <regex>
